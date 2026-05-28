@@ -4,10 +4,23 @@ import { ShieldCheck, Mail, Lock, ArrowRight } from 'lucide-react';
 function LoginForm({ onSubmit }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit({ email, password });
+    setError('');
+    setIsLoading(true);
+    try {
+      const success = await onSubmit({ email, password });
+      if (!success) {
+        setError('Invalid email or password. Please try again.');
+      }
+    } catch (err) {
+      setError('A connection error occurred. Please check your backend status.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -21,6 +34,12 @@ function LoginForm({ onSubmit }) {
         <h2 className="text-2xl font-bold text-slate-800">Welcome to FamilyGuard</h2>
         <p className="text-sm text-slate-500 mt-2">Sign in to monitor your connected devices</p>
       </div>
+
+      {error && (
+        <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg text-center">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
@@ -36,6 +55,7 @@ function LoginForm({ onSubmit }) {
               onChange={(e) => setEmail(e.target.value)}
               className="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all text-sm"
               placeholder="admin@example.com"
+              disabled={isLoading}
               required
             />
           </div>
@@ -54,6 +74,7 @@ function LoginForm({ onSubmit }) {
               onChange={(e) => setPassword(e.target.value)}
               className="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all text-sm"
               placeholder="••••••••"
+              disabled={isLoading}
               required
             />
           </div>
@@ -61,10 +82,11 @@ function LoginForm({ onSubmit }) {
 
         <button 
           type="submit"
-          className="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors group"
+          disabled={isLoading}
+          className={`w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white ${isLoading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors group`}
         >
-          Sign In
-          <ArrowRight className="ml-2 w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+          {isLoading ? 'Signing In...' : 'Sign In'}
+          {!isLoading && <ArrowRight className="ml-2 w-4 h-4 transform group-hover:translate-x-1 transition-transform" />}
         </button>
       </form>
     </div>
