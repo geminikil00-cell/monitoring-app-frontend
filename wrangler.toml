@@ -1,6 +1,8 @@
 name = "parent-dashboard"
 compatibility_date = "2024-05-28"
-pages_build_output_dir = "dist"
+
+[assets]
+directory = "./dist"
 
 [vars]
 VITE_API_URL = "https://your-backend-api.com/api/v1"
