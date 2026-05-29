@@ -24,7 +24,7 @@ const AppUsageChart = ({ data }) => {
   // Format data for chart
   const chartData = data.map(item => ({
     name: item.app_name,
-    minutes: Math.round(item.duration / 60)
+    minutes: Math.max(1, Math.ceil(item.duration / 60))
   })).sort((a, b) => b.minutes - a.minutes).slice(0, 5);
 
   return (

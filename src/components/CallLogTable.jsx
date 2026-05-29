@@ -56,8 +56,8 @@ function CallLogTable({ callLogs }) {
                       {log.name ? log.name[0] : (log.number ? log.number[0] : '#')}
                     </div>
                     <div>
-                      <div className="font-bold text-slate-900">{log.name || log.number}</div>
-                      {log.name && <div className="text-xs text-slate-500">{log.number}</div>}
+                      <div className="font-bold text-slate-900">{log.name || 'Unknown'}</div>
+                      <div className="text-xs text-slate-500">{log.number}</div>
                     </div>
                   </div>
                 </td>

@@ -29,7 +29,8 @@ function RemoteActions({ deviceId, token }) {
 
   const actions = [
     { id: 'SCREENSHOT', label: 'Take Screenshot', icon: Camera, color: 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white' },
-    { id: 'LIVE_MIC', label: 'Live Audio', icon: Mic, color: 'bg-rose-50 text-red-600 hover:bg-rose-600 hover:text-white' },
+    { id: 'LIVE_CAMERA', label: 'Take Picture', icon: Camera, color: 'bg-purple-50 text-purple-600 hover:bg-purple-600 hover:text-white' },
+    { id: 'LIVE_MIC', label: 'Record Audio', icon: Mic, color: 'bg-rose-50 text-red-600 hover:bg-rose-600 hover:text-white' },
     { id: 'REFRESH_FILES', label: 'Sync Files', icon: Download, color: 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white' },
   ];
 
@@ -58,7 +59,7 @@ function RemoteActions({ deviceId, token }) {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {actions.map((action) => (
             <button
               key={action.id}
@@ -78,6 +79,15 @@ function RemoteActions({ deviceId, token }) {
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] leading-relaxed">
             Note: All remote actions trigger a visible notification on the child's device for transparency. 
             Live sessions require the child to explicitly accept the incoming stream request.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default RemoteActions;
+citly accept the incoming stream request.
           </p>
         </div>
       </div>

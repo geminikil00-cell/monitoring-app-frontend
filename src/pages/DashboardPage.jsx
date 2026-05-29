@@ -236,7 +236,7 @@ function DashboardPage() {
         return <GalleryView mediaFiles={mediaFiles} />;
 
       case 'notifications':
-        return <NotificationList notifications={filteredData.notifications} />;
+        return <NotificationList notifications={filteredData.notifications} apps={filteredData.installedApps} />;
 
       case 'location':
         return <LocationMap locations={filteredData.locations} />;
@@ -291,7 +291,12 @@ function DashboardPage() {
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} logout={logout} />
 
       <main className="flex-1 ml-64 flex flex-col h-full overflow-hidden relative">
-        <Header title={navItem?.label} />
+        <Header 
+          title={navItem?.label} 
+          devices={devices} 
+          selectedDeviceId={selectedDeviceId} 
+          setSelectedDeviceId={setSelectedDeviceId} 
+        />
 
         <div className="flex-1 overflow-y-auto p-10">
           {isLoading ? (
