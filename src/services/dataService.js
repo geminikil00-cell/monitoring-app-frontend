@@ -41,6 +41,10 @@ const getNotifications = (token) => {
   return axios.get(`${API_URL}/users/me/notifications/`, getAuthHeaders(token));
 };
 
+const getDeviceMedia = (token, deviceId) => {
+  return axios.get(`${API_URL}/devices/${deviceId}/media/`, getAuthHeaders(token));
+};
+
 const sendCommand = (token, deviceId, commandType, payload = null) => {
   return axios.post(`${API_URL}/devices/${deviceId}/commands/`, {
     command_type: commandType,
@@ -57,6 +61,7 @@ const dataService = {
   getDevices,
   getInstalledApps,
   getNotifications,
+  getDeviceMedia,
   sendCommand,
 };
 

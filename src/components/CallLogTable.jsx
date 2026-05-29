@@ -52,10 +52,13 @@ function CallLogTable({ callLogs }) {
               <tr key={log.id} className="hover:bg-slate-50/50 transition-colors group">
                 <td className="px-6 py-4">
                   <div className="flex items-center">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mr-3 group-hover:bg-white transition-colors">
-                      {log.number[0]}
+                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mr-3 group-hover:bg-white transition-colors font-bold uppercase">
+                      {log.name ? log.name[0] : (log.number ? log.number[0] : '#')}
                     </div>
-                    <span className="font-bold text-slate-900">{log.number}</span>
+                    <div>
+                      <div className="font-bold text-slate-900">{log.name || log.number}</div>
+                      {log.name && <div className="text-xs text-slate-500">{log.number}</div>}
+                    </div>
                   </div>
                 </td>
                 <td className="px-6 py-4">
