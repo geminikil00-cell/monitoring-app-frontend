@@ -49,33 +49,43 @@ function DashboardPage() {
       setIsLoading(true);
       const fetchData = async () => {
         try {
-          const [devicesRes, calls, sms, apps, web, locs, installed, notifs] = await Promise.all([
-            dataService.getDevices(token),
-            dataService.getCallLogs(token),
-            dataService.getSmsMessages(token),
-            dataService.getAppUsage(token),
-            dataService.getWebActivity(token),
-            dataService.getLocations(token),
-            dataService.getInstalledApps(token),
-            dataService.getNotifications(token)
+          const fetchSafe = async (promise, fallback = []) => {
+            try {
+              const res = await promise;
+              return res.data;
+            } catch (err) {
+              console.error("Endpoint fetch error:", err);
+              return fallback;
+            }
+          };
+
+          const [devices, calls, sms, apps, web, locs, installed, notifs] = await Promise.all([
+            fetchSafe(dataService.getDevices(token)),
+            fetchSafe(dataService.getCallLogs(token)),
+            fetchSafe(dataService.getSmsMessages(token)),
+            fetchSafe(dataService.getAppUsage(token)),
+            fetchSafe(dataService.getWebActivity(token)),
+            fetchSafe(dataService.getLocations(token)),
+            fetchSafe(dataService.getInstalledApps(token)),
+            fetchSafe(dataService.getNotifications(token))
           ]);
           
-          setDevices(devicesRes.data);
-          if (devicesRes.data.length > 0 && !selectedDeviceId) {
-            setSelectedDeviceId(devicesRes.data[0].id);
+          setDevices(devices);
+          if (devices.length > 0 && !selectedDeviceId) {
+            setSelectedDeviceId(devices[0].id);
           }
 
           setData({
-            callLogs: calls.data,
-            smsMessages: sms.data,
-            appUsage: apps.data,
-            webActivity: web.data,
-            locations: locs.data,
-            installedApps: installed.data,
-            notifications: notifs.data
+            callLogs: calls,
+            smsMessages: sms,
+            appUsage: apps,
+            webActivity: web,
+            locations: locs,
+            installedApps: installed,
+            notifications: notifs
           });
         } catch (error) {
-          console.error('Error fetching data:', error);
+          console.error('Error in fetchData:', error);
         } finally {
           setIsLoading(false);
         }
