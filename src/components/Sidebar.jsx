@@ -8,7 +8,8 @@ import {
   Clock, 
   LogOut, 
   ShieldCheck,
-  Globe
+  Globe,
+  Bell
 } from 'lucide-react';
 
 const Sidebar = ({ activeTab, setActiveTab, logout }) => {
@@ -16,6 +17,7 @@ const Sidebar = ({ activeTab, setActiveTab, logout }) => {
     { id: 'devices', label: 'Connected Devices', icon: Smartphone },
     { id: 'calls', label: 'Call History', icon: PhoneCall },
     { id: 'sms', label: 'Messages', icon: MessageSquare },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'location', label: 'Live Location', icon: MapPin },
     { id: 'apps', label: 'App Usage', icon: LayoutGrid },
     { id: 'web', label: 'Web Activity', icon: Globe },

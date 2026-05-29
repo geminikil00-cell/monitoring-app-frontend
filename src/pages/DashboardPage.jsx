@@ -9,6 +9,9 @@ import SmsMessageTable from '../components/SmsMessageTable';
 import AppUsageChart from '../components/AppUsageChart';
 import LocationMap from '../components/LocationMap';
 import WebActivityList from '../components/WebActivityList';
+import NotificationList from '../components/NotificationList';
+import InstalledAppList from '../components/InstalledAppList';
+import RemoteActions from '../components/RemoteActions';
 import { 
   PhoneCall, 
   MessageSquare, 
@@ -19,7 +22,9 @@ import {
   ChevronRight,
   Battery,
   Activity,
-  AlertTriangle
+  AlertTriangle,
+  Bell,
+  Zap
 } from 'lucide-react';
 
 function DashboardPage() {
@@ -33,7 +38,9 @@ function DashboardPage() {
     smsMessages: [],
     appUsage: [],
     webActivity: [],
-    locations: []
+    locations: [],
+    installedApps: [],
+    notifications: []
   });
 
   useEffect(() => {
@@ -41,13 +48,15 @@ function DashboardPage() {
       setIsLoading(true);
       const fetchData = async () => {
         try {
-          const [devicesRes, calls, sms, apps, web, locs] = await Promise.all([
+          const [devicesRes, calls, sms, apps, web, locs, installed, notifs] = await Promise.all([
             dataService.getDevices(token),
             dataService.getCallLogs(token),
             dataService.getSmsMessages(token),
             dataService.getAppUsage(token),
             dataService.getWebActivity(token),
-            dataService.getLocations(token)
+            dataService.getLocations(token),
+            dataService.getInstalledApps(token),
+            dataService.getNotifications(token)
           ]);
           
           setDevices(devicesRes.data);
@@ -60,7 +69,9 @@ function DashboardPage() {
             smsMessages: sms.data,
             appUsage: apps.data,
             webActivity: web.data,
-            locations: locs.data
+            locations: locs.data,
+            installedApps: installed.data,
+            notifications: notifs.data
           });
         } catch (error) {
           console.error('Error fetching data:', error);
@@ -100,6 +111,8 @@ function DashboardPage() {
     appUsage: data.appUsage.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
     webActivity: data.webActivity.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
     locations: data.locations.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
+    installedApps: data.installedApps.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
+    notifications: data.notifications.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
   };
 
   const renderContent = () => {
@@ -114,62 +127,72 @@ function DashboardPage() {
               <StatsCard label="Sites Visited" value={filteredData.webActivity.length} icon={Globe} color="bg-amber-50 text-amber-600" trend={24} />
             </div>
 
-            <h3 className="text-xl font-bold text-slate-900 mt-10 mb-6">Active Devices</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {devices.length === 0 ? (
-                <div className="col-span-2 bg-white rounded-3xl p-12 text-center border border-slate-200 border-dashed">
-                  <Smartphone className="w-16 h-16 text-slate-200 mx-auto mb-6" />
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">No Devices Connected</h3>
-                  <p className="text-slate-500 max-w-sm mx-auto">Install the child app on a device to start monitoring.</p>
-                </div>
-              ) : (
-                devices.map(device => {
-                  const status = getStatus(device.last_seen);
-                  const isSelected = selectedDeviceId === device.id;
-                  return (
-                    <div 
-                      key={device.id}
-                      onClick={() => setSelectedDeviceId(device.id)}
-                      className={`bg-white rounded-3xl shadow-sm border p-8 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 transition-all cursor-pointer relative overflow-hidden group border-b-4 ${
-                        isSelected ? 'border-indigo-500 shadow-md' : 'border-slate-200 border-b-transparent hover:border-b-indigo-500'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-6">
-                        <div className="flex items-center">
-                          <div className={`p-4 rounded-2xl ${status === 'online' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-600'}`}>
-                            <Smartphone className="w-8 h-8" />
-                          </div>
-                          <div className="ml-5">
-                            <h3 className="text-xl font-bold text-slate-900">{device.name || 'Unknown Device'}</h3>
-                            <p className="text-sm text-slate-500 font-medium">{device.model || 'Unknown Model'}</p>
-                          </div>
-                        </div>
-                        <span className={`px-4 py-1.5 text-xs font-bold rounded-full tracking-wider ${
-                          status === 'online' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
-                        }`}>
-                          {status.toUpperCase()}
-                        </span>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-6 mb-8">
-                        <div className="bg-slate-50 p-4 rounded-2xl flex items-center">
-                          <Battery className={`w-5 h-5 mr-3 ${device.battery_level < 20 ? 'text-red-500 animate-pulse' : 'text-slate-400'}`} />
-                          <span className="text-sm font-bold text-slate-700">{device.battery_level}%</span>
-                        </div>
-                        <div className="bg-slate-50 p-4 rounded-2xl flex items-center">
-                          <Activity className="w-5 h-5 mr-3 text-slate-400" />
-                          <span className="text-sm font-bold text-slate-700">{formatLastSeen(device.last_seen)}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between text-indigo-600 font-bold text-sm">
-                        {isSelected ? 'Currently Selected' : 'Select Device'}
-                        <ChevronRight className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" />
-                      </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-10">
+              <div className="lg:col-span-2">
+                <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
+                  <Zap className="w-5 h-5 mr-2 text-indigo-500" />
+                  Active Devices
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {devices.length === 0 ? (
+                    <div className="col-span-2 bg-white rounded-3xl p-12 text-center border border-slate-200 border-dashed">
+                      <Smartphone className="w-16 h-16 text-slate-200 mx-auto mb-6" />
+                      <h3 className="text-xl font-bold text-slate-900 mb-2">No Devices Connected</h3>
+                      <p className="text-slate-500 max-w-sm mx-auto">Install the child app on a device to start monitoring.</p>
                     </div>
-                  );
-                })
-              )}
+                  ) : (
+                    devices.map(device => {
+                      const status = getStatus(device.last_seen);
+                      const isSelected = selectedDeviceId === device.id;
+                      return (
+                        <div 
+                          key={device.id}
+                          onClick={() => setSelectedDeviceId(device.id)}
+                          className={`bg-white rounded-3xl shadow-sm border p-8 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 transition-all cursor-pointer relative overflow-hidden group border-b-4 ${
+                            isSelected ? 'border-indigo-500 shadow-md' : 'border-slate-200 border-b-transparent hover:border-b-indigo-500'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start mb-6">
+                            <div className="flex items-center">
+                              <div className={`p-4 rounded-2xl ${status === 'online' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-600'}`}>
+                                <Smartphone className="w-8 h-8" />
+                              </div>
+                              <div className="ml-5">
+                                <h3 className="text-xl font-bold text-slate-900">{device.name || 'Unknown Device'}</h3>
+                                <p className="text-sm text-slate-500 font-medium">{device.model || 'Unknown Model'}</p>
+                              </div>
+                            </div>
+                            <span className={`px-4 py-1.5 text-xs font-bold rounded-full tracking-wider ${
+                              status === 'online' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
+                            }`}>
+                              {status.toUpperCase()}
+                            </span>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-6 mb-8">
+                            <div className="bg-slate-50 p-4 rounded-2xl flex items-center">
+                              <Battery className={`w-5 h-5 mr-3 ${device.battery_level < 20 ? 'text-red-500 animate-pulse' : 'text-slate-400'}`} />
+                              <span className="text-sm font-bold text-slate-700">{device.battery_level}%</span>
+                            </div>
+                            <div className="bg-slate-50 p-4 rounded-2xl flex items-center">
+                              <Activity className="w-5 h-5 mr-3 text-slate-400" />
+                              <span className="text-sm font-bold text-slate-700">{formatLastSeen(device.last_seen)}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between text-indigo-600 font-bold text-sm">
+                            {isSelected ? 'Currently Selected' : 'Select Device'}
+                            <ChevronRight className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" />
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+              <div className="lg:col-span-1">
+                <RemoteActions deviceId={selectedDeviceId} token={token} />
+              </div>
             </div>
           </div>
         );
@@ -180,49 +203,26 @@ function DashboardPage() {
       case 'sms':
         return <SmsMessageTable smsMessages={filteredData.smsMessages} />;
 
+      case 'notifications':
+        return <NotificationList notifications={filteredData.notifications} />;
+
       case 'location':
         return <LocationMap locations={filteredData.locations} />;
 
       case 'apps':
         return (
-          <div className="space-y-8 animate-in fade-in duration-500">
-             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
+          <div className="space-y-12">
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
                 <div className="flex justify-between items-start mb-8">
                   <div>
                     <h3 className="text-xl font-bold text-slate-900 tracking-tight">App Usage Analytics</h3>
                     <p className="text-sm text-slate-500 mt-1 font-medium">Daily breakdown of most used applications</p>
                   </div>
-                  <div className="flex space-x-2">
-                    {['Today', 'Weekly', 'Monthly'].map(p => (
-                      <button key={p} className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${p === 'Today' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                        {p}
-                      </button>
-                    ))}
-                  </div>
                 </div>
                 <AppUsageChart data={filteredData.appUsage} />
              </div>
              
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-indigo-500/30 transition-all">
-                  <div>
-                    <p className="text-sm text-slate-500 font-bold uppercase tracking-widest">Most Used App</p>
-                    <p className="text-2xl font-black text-slate-900 mt-2">
-                      {filteredData.appUsage.length > 0 ? [...filteredData.appUsage].sort((a,b) => b.duration - a.duration)[0].app_name : 'N/A'}
-                    </p>
-                  </div>
-                  <div className="p-5 bg-pink-50 rounded-2xl text-pink-600 group-hover:bg-pink-600 group-hover:text-white transition-all">
-                    <LayoutGrid className="w-8 h-8" />
-                  </div>
-                </div>
-                <div className="bg-indigo-600 p-8 rounded-3xl shadow-lg shadow-indigo-600/20 flex items-center justify-between text-white relative overflow-hidden group">
-                  <div className="relative z-10">
-                    <p className="text-sm text-indigo-100 font-bold uppercase tracking-widest">Screen Time Limit</p>
-                    <p className="text-2xl font-black mt-2">3h 00m / 4h 00m</p>
-                  </div>
-                  <Clock className="w-20 h-20 absolute -right-4 -bottom-4 text-indigo-500 opacity-20 group-hover:scale-110 transition-transform" />
-                </div>
-             </div>
+             <InstalledAppList apps={filteredData.installedApps} />
           </div>
         );
 
@@ -235,9 +235,6 @@ function DashboardPage() {
             <Clock className="w-16 h-16 text-indigo-100 mx-auto mb-6" />
             <h3 className="text-xl font-bold text-slate-900 mb-2">Screen Time Management</h3>
             <p className="text-slate-500 max-w-sm mx-auto">This feature is currently in development. Soon you'll be able to set daily limits and downtime schedules.</p>
-            <button className="mt-8 bg-slate-900 text-white px-8 py-3 rounded-2xl font-bold text-sm hover:bg-indigo-600 transition-all">
-              Join Waitlist
-            </button>
           </div>
         );
 
@@ -250,8 +247,9 @@ function DashboardPage() {
     { id: 'devices', label: 'Connected Devices' },
     { id: 'calls', label: 'Call History' },
     { id: 'sms', label: 'Messages' },
+    { id: 'notifications', label: 'Notifications' },
     { id: 'location', label: 'Live Location' },
-    { id: 'apps', label: 'App Usage' },
+    { id: 'apps', label: 'App Inventory' },
     { id: 'web', label: 'Web Activity' },
     { id: 'screen', label: 'Screen Time' },
   ].find(i => i.id === activeTab);
