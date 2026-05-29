@@ -5,4 +5,4 @@ compatibility_date = "2024-05-28"
 directory = "./dist"
 
 [vars]
-VITE_API_URL = "https://your-backend-api.com/api/v1"
+VITE_API_URL = "https://monitoring.joclass.com/api/v1"
