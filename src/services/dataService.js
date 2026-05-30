@@ -29,10 +29,6 @@ const getLocations = (token) => {
   return axios.get(`${API_URL}/users/me/locations/`, getAuthHeaders(token));
 };
 
-const getDevices = (token) => {
-  return axios.get(`${API_URL}/devices/`, getAuthHeaders(token));
-};
-
 const getInstalledApps = (token) => {
   return axios.get(`${API_URL}/users/me/installed_apps/`, getAuthHeaders(token));
 };
@@ -41,17 +37,8 @@ const getNotifications = (token) => {
   return axios.get(`${API_URL}/users/me/notifications/`, getAuthHeaders(token));
 };
 
-const getDeviceMedia = (token, deviceId, skip = 0, limit = 50, category = null) => {
-  let url = `${API_URL}/devices/${deviceId}/media/?skip=${skip}&limit=${limit}`;
-  if (category) url += `&category=${encodeURIComponent(category)}`;
-  return axios.get(url, getAuthHeaders(token));
-};
-
-const sendCommand = (token, deviceId, commandType, payload = null) => {
-  return axios.post(`${API_URL}/devices/${deviceId}/commands/`, {
-    command_type: commandType,
-    payload: payload ? JSON.stringify(payload) : null
-  }, getAuthHeaders(token));
+const getDevices = (token) => {
+  return axios.get(`${API_URL}/devices/`, getAuthHeaders(token));
 };
 
 const dataService = {
@@ -63,8 +50,6 @@ const dataService = {
   getDevices,
   getInstalledApps,
   getNotifications,
-  getDeviceMedia,
-  sendCommand,
 };
 
 export default dataService;
