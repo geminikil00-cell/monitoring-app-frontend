@@ -87,12 +87,3 @@ function RemoteActions({ deviceId, token }) {
 }
 
 export default RemoteActions;
-citly accept the incoming stream request.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default RemoteActions;
