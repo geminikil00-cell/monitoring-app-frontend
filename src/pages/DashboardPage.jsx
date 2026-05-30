@@ -232,12 +232,6 @@ function DashboardPage() {
       case 'sms':
         return <SmsMessageTable smsMessages={filteredData.smsMessages} />;
 
-      case 'images':
-        return <GalleryView mediaFiles={mediaFiles} />;
-
-      case 'commands':
-        return <RemoteActions deviceId={selectedDeviceId} token={token} fullView={true} />;
-
       case 'notifications':
         return <NotificationList notifications={filteredData.notifications} apps={filteredData.installedApps} />;
 
@@ -280,10 +274,8 @@ function DashboardPage() {
 
   const navItem = [
     { id: 'devices', label: 'Connected Devices' },
-    { id: 'commands', label: 'Remote Commands' },
     { id: 'calls', label: 'Call History' },
     { id: 'sms', label: 'Messages' },
-    { id: 'images', label: 'Photos & Gallery' },
     { id: 'notifications', label: 'Notifications' },
     { id: 'location', label: 'Live Location' },
     { id: 'apps', label: 'App Inventory' },

@@ -16,10 +16,8 @@ import {
 const Sidebar = ({ activeTab, setActiveTab, logout }) => {
   const navItems = [
     { id: 'devices', label: 'Connected Devices', icon: Smartphone },
-    { id: 'commands', label: 'Remote Commands', icon: ShieldCheck },
     { id: 'calls', label: 'Call History', icon: PhoneCall },
     { id: 'sms', label: 'Messages', icon: MessageSquare },
-    { id: 'images', label: 'Photos & Gallery', icon: Image },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'location', label: 'Live Location', icon: MapPin },
     { id: 'apps', label: 'App Inventory', icon: LayoutGrid },
