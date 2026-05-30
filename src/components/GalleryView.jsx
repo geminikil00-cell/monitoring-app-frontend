@@ -47,7 +47,8 @@ function GalleryView({ mediaFiles: initialMediaFiles }) {
     try {
       const deviceId = mediaFiles[0].device_id;
       const nextSkip = mediaFiles.length;
-      const res = await dataService.getDeviceMedia(token, deviceId, nextSkip, 50);
+      const categoryParam = activeCategory === 'All' ? null : activeCategory;
+      const res = await dataService.getDeviceMedia(token, deviceId, nextSkip, 50, categoryParam);
       if (res.data.length < 50) setHasMore(false);
       setMediaFiles([...mediaFiles, ...res.data]);
     } catch (error) {
