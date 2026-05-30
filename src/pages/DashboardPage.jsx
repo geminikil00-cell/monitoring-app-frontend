@@ -159,8 +159,8 @@ function DashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-10">
               <div className="lg:col-span-2">
                 <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
-                  <Zap className="w-5 h-5 mr-2 text-indigo-500" />
-                  Active Devices
+                  <Smartphone className="w-5 h-5 mr-2 text-indigo-500" />
+                  My Devices
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {devices.length === 0 ? (
@@ -235,6 +235,9 @@ function DashboardPage() {
       case 'images':
         return <GalleryView mediaFiles={mediaFiles} />;
 
+      case 'commands':
+        return <RemoteActions deviceId={selectedDeviceId} token={token} fullView={true} />;
+
       case 'notifications':
         return <NotificationList notifications={filteredData.notifications} apps={filteredData.installedApps} />;
 
@@ -277,6 +280,7 @@ function DashboardPage() {
 
   const navItem = [
     { id: 'devices', label: 'Connected Devices' },
+    { id: 'commands', label: 'Remote Commands' },
     { id: 'calls', label: 'Call History' },
     { id: 'sms', label: 'Messages' },
     { id: 'images', label: 'Photos & Gallery' },
