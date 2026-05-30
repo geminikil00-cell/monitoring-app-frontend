@@ -11,8 +11,6 @@ import LocationMap from '../components/LocationMap';
 import WebActivityList from '../components/WebActivityList';
 import NotificationList from '../components/NotificationList';
 import InstalledAppList from '../components/InstalledAppList';
-import RemoteActions from '../components/RemoteActions';
-import GalleryView from '../components/GalleryView';
 import { 
   PhoneCall, 
   MessageSquare, 
@@ -218,9 +216,6 @@ function DashboardPage() {
                     })
                   )}
                 </div>
-              </div>
-              <div className="lg:col-span-1">
-                <RemoteActions deviceId={selectedDeviceId} token={token} />
               </div>
             </div>
           </div>
