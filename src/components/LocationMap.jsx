@@ -18,7 +18,7 @@ const LocationMap = ({ locations }) => {
           {lastLocation ? (
             <div className="space-y-1">
               <p className="text-sm text-slate-700 font-medium">Coords: {lastLocation.latitude}, {lastLocation.longitude}</p>
-              <p className="text-xs text-slate-400">Updated {new Date(lastLocation.timestamp).toLocaleTimeString()}</p>
+              <p className="text-xs text-slate-400">Updated {new Date(lastLocation.timestamp < 10000000000 ? lastLocation.timestamp * 1000 : lastLocation.timestamp).toLocaleTimeString()}</p>
             </div>
           ) : (
             <p className="text-sm text-slate-500 italic">Waiting for device GPS signal...</p>

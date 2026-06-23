@@ -3,7 +3,7 @@ import { Bell, Clock, Smartphone } from 'lucide-react';
 
 function NotificationList({ notifications, apps }) {
   const formatTime = (timestamp) => {
-    const date = new Date(timestamp);
+    const date = new Date(timestamp < 10000000000 ? timestamp * 1000 : timestamp);
     return date.toLocaleString();
   };
 

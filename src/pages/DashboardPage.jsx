@@ -41,6 +41,7 @@ function DashboardPage() {
     installedApps: [],
     notifications: []
   });
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     if (token) {
@@ -91,25 +92,7 @@ function DashboardPage() {
 
       fetchData();
     }
-  }, [token]);
-
-  const [mediaFiles, setMediaFiles] = useState([]);
-
-  useEffect(() => {
-    if (token && selectedDeviceId) {
-      const fetchMedia = async () => {
-        try {
-          const res = await dataService.getDeviceMedia(token, selectedDeviceId);
-          setMediaFiles(res.data);
-        } catch (error) {
-          console.error('Error fetching device media:', error);
-        }
-      };
-      fetchMedia();
-    } else {
-      setMediaFiles([]);
-    }
-  }, [token, selectedDeviceId]);
+  }, [token, refreshTrigger]);
 
   const getStatus = (lastSeen) => {
     if (!lastSeen) return 'offline';
@@ -313,7 +296,10 @@ function DashboardPage() {
               <span className="text-xs font-bold text-slate-700 uppercase tracking-widest">System Healthy</span>
             </div>
             <div className="h-4 w-px bg-slate-200"></div>
-            <button className="text-[10px] font-black text-indigo-600 uppercase hover:text-indigo-700 transition-colors">
+            <button 
+              onClick={() => setRefreshTrigger(prev => prev + 1)}
+              className="text-[10px] font-black text-indigo-600 uppercase hover:text-indigo-700 transition-colors"
+            >
               Refresh All
             </button>
           </div>

@@ -39,7 +39,7 @@ const WebActivityList = ({ activity }) => {
               <div className="flex flex-col items-end space-y-2">
                 <div className="flex items-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   <Clock className="w-3 h-3 mr-1" />
-                  {new Date(site.visit_time).toLocaleString()}
+                  {new Date(site.visit_time < 10000000000 ? site.visit_time * 1000 : site.visit_time).toLocaleString()}
                 </div>
                 <a 
                   href={site.url} 

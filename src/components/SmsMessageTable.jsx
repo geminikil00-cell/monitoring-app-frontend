@@ -24,7 +24,7 @@ function SmsMessageTable({ smsMessages }) {
                 <h4 className="font-bold text-slate-900">{msg.address}</h4>
                 <div className="flex items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                   <Clock className="w-3 h-3 mr-1" />
-                  {new Date(msg.date).toLocaleString()}
+                  {new Date(msg.date < 10000000000 ? msg.date * 1000 : msg.date).toLocaleString()}
                 </div>
               </div>
             </div>

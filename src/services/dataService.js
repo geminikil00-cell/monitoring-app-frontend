@@ -3,6 +3,17 @@ import axios from 'axios';
 const BASE_URL = import.meta.env.VITE_API_URL || 'https://monitoring.joclass.com/api/v1';
 const API_URL = BASE_URL.replace(/\/$/, '');
 
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 const getAuthHeaders = (token) => ({
   headers: {
     Authorization: `Bearer ${token}`,
@@ -41,6 +52,14 @@ const getDevices = (token) => {
   return axios.get(`${API_URL}/devices/`, getAuthHeaders(token));
 };
 
+const sendCommand = (token, deviceId, commandType) => {
+  return axios.post(`${API_URL}/devices/${deviceId}/commands/`, { command_type: commandType }, getAuthHeaders(token));
+};
+
+const getDeviceMedia = (token, deviceId) => {
+  return axios.get(`${API_URL}/devices/${deviceId}/media/`, getAuthHeaders(token));
+};
+
 const dataService = {
   getCallLogs,
   getSmsMessages,
@@ -50,6 +69,9 @@ const dataService = {
   getDevices,
   getInstalledApps,
   getNotifications,
+  sendCommand,
+  getDeviceMedia,
 };
 
 export default dataService;
+

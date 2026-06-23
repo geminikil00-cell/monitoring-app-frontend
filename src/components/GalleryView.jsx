@@ -33,7 +33,7 @@ function GalleryView({ mediaFiles: initialMediaFiles }) {
     const base = (import.meta.env.VITE_API_URL || 'https://monitoring.joclass.com/api/v1')
       .replace(/\/api\/v1\/?$/, '')
       .replace(/\/$/, '');
-    return `${base}${s3Key}`;
+    return `${base}/static/${s3Key.replace(/^\//, '')}`;
   };
 
   const getThumbnailUrl = (img) => {

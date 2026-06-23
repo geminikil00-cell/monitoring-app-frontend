@@ -12,12 +12,9 @@ function LoginForm({ onSubmit }) {
     setError('');
     setIsLoading(true);
     try {
-      const success = await onSubmit({ email, password });
-      if (!success) {
-        setError('Invalid email or password. Please try again.');
-      }
+      await onSubmit({ email, password });
     } catch (err) {
-      setError('A connection error occurred. Please check your backend status.');
+      setError(err.response?.data?.detail || "Login failed");
     } finally {
       setIsLoading(false);
     }

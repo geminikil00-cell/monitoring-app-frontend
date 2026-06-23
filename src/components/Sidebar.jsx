@@ -22,6 +22,7 @@ const Sidebar = ({ activeTab, setActiveTab, logout }) => {
     { id: 'location', label: 'Live Location', icon: MapPin },
     { id: 'apps', label: 'App Inventory', icon: LayoutGrid },
     { id: 'web', label: 'Web Activity', icon: Globe },
+    { id: 'screen', label: 'Screen Time', icon: Clock },
   ];
 
   return (

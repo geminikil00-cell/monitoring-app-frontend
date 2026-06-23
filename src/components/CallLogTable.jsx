@@ -76,7 +76,7 @@ function CallLogTable({ callLogs }) {
                 <td className="px-6 py-4">
                   <div className="flex items-center text-sm text-slate-500">
                     <Calendar className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
-                    {new Date(log.date).toLocaleString()}
+                    {new Date(log.date < 10000000000 ? log.date * 1000 : log.date).toLocaleString()}
                   </div>
                 </td>
               </tr>

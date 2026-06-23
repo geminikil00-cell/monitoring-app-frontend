@@ -3,7 +3,7 @@ import { LayoutGrid, Download, ExternalLink, Calendar } from 'lucide-react';
 
 function InstalledAppList({ apps }) {
   const formatDate = (timestamp) => {
-    const date = new Date(timestamp);
+    const date = new Date(timestamp < 10000000000 ? timestamp * 1000 : timestamp);
     return date.toLocaleDateString();
   };
 
