@@ -28,9 +28,8 @@ export default function LiveScreenView({ selectedDevice }) {
     if (!isLive || !selectedDevice) return;
     timerRef.current = setInterval(async () => {
       try {
-        const url = dataService.getLatestLiveFrameUrl(selectedDevice.id);
-        const res = await axios.get(url, { responseType: 'blob' });
-        if (res.status === 200) {
+        const res = await dataService.getLiveFrameBlob(selectedDevice.id);
+        if (res && res.status === 200) {
           const objUrl = URL.createObjectURL(res.data);
           setFrameSrc(prev => { if (prev) URL.revokeObjectURL(prev); return objUrl; });
           setLastUpdated(new Date().toLocaleTimeString());

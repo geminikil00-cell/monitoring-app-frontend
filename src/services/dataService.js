@@ -81,14 +81,20 @@ const dataService = {
   sendCommand,
   getDeviceMedia,
   deleteDevice,
-  startLiveView: async (deviceId) => {
-    return axios.post('/commands', { device_id: deviceId, command: 'START_LIVE_VIEW' });
+  startLiveView: async (deviceId, token) => {
+    return axios.post(`${API_URL}/devices/${deviceId}/commands/`, { command_type: 'START_LIVE_VIEW' }, getAuthHeaders(token || localStorage.getItem('token')));
   },
-  stopLiveView: async (deviceId) => {
-    return axios.post('/commands', { device_id: deviceId, command: 'STOP_LIVE_VIEW' });
+  stopLiveView: async (deviceId, token) => {
+    return axios.post(`${API_URL}/devices/${deviceId}/commands/`, { command_type: 'STOP_LIVE_VIEW' }, getAuthHeaders(token || localStorage.getItem('token')));
   },
   getLatestLiveFrameUrl: (deviceId) => {
-    return `/api/v1/live-screen/latest?device_id=${deviceId}`;
+    return `${API_URL}/live-screen/latest?device_id=${deviceId}`;
+  },
+  getLiveFrameBlob: async (deviceId, token) => {
+    return axios.get(`${API_URL}/live-screen/latest?device_id=${deviceId}`, {
+      responseType: 'blob',
+      ...getAuthHeaders(token || localStorage.getItem('token'))
+    });
   },
 };
 
