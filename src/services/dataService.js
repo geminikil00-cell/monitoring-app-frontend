@@ -81,6 +81,15 @@ const dataService = {
   sendCommand,
   getDeviceMedia,
   deleteDevice,
+  startLiveView: async (deviceId) => {
+    return axios.post('/commands', { device_id: deviceId, command: 'START_LIVE_VIEW' });
+  },
+  stopLiveView: async (deviceId) => {
+    return axios.post('/commands', { device_id: deviceId, command: 'STOP_LIVE_VIEW' });
+  },
+  getLatestLiveFrameUrl: (deviceId) => {
+    return `/api/v1/live-screen/latest?device_id=${deviceId}`;
+  },
 };
 
 export default dataService;

