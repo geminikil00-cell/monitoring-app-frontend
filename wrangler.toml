@@ -1,5 +1,6 @@
-name = "parent-dashboard"
+name = "monitoring-app-frontend"
 compatibility_date = "2024-05-28"
+account_id = "f3988ca02d5b5aef9e2514bc47beba9b"
 
 [assets]
 directory = "./dist"
