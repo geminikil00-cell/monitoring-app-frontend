@@ -24,7 +24,8 @@ import {
   Activity,
   AlertTriangle,
   Bell,
-  Zap
+  Zap,
+  Trash2
 } from 'lucide-react';
 
 function DashboardPage() {
@@ -196,9 +197,26 @@ function DashboardPage() {
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between text-indigo-600 font-bold text-sm">
-                            {isSelected ? 'Currently Selected' : 'Select Device'}
-                            <ChevronRight className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" />
+                          <div className="flex items-center justify-between font-bold text-sm">
+                            <span className="text-indigo-600 flex items-center">
+                              {isSelected ? 'Currently Selected' : 'Select Device'}
+                              <ChevronRight className="w-5 h-5 ml-1 transform group-hover:translate-x-1 transition-transform" />
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm(`Permanently delete device "${device.name}"? This cannot be undone.`)) {
+                                  dataService.deleteDevice(token, device.id).then(() => {
+                                    setDevices(devices.filter(d => d.id !== device.id));
+                                    if (selectedDeviceId === device.id) setSelectedDeviceId(null);
+                                  });
+                                }
+                              }}
+                              className="p-2.5 bg-red-50 text-red-600 rounded-2xl hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                              title="Delete Device"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </div>
                       );

@@ -64,6 +64,10 @@ const getDeviceMedia = (token, deviceId) => {
   return axios.get(`${API_URL}/devices/${deviceId}/media/`, getAuthHeaders(token));
 };
 
+const deleteDevice = (token, deviceId) => {
+  return axios.delete(`${API_URL}/devices/${deviceId}`, getAuthHeaders(token));
+};
+
 const dataService = {
   getCallLogs,
   getSmsMessages,
@@ -76,6 +80,7 @@ const dataService = {
   getKeylogs,
   sendCommand,
   getDeviceMedia,
+  deleteDevice,
 };
 
 export default dataService;
