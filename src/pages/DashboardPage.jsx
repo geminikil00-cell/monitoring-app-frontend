@@ -245,15 +245,6 @@ function DashboardPage() {
       case 'keylogs':
         return <KeylogList keylogs={filteredData.keylogs} />;
 
-      case 'screen':
-        return (
-          <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 border-dashed">
-            <Clock className="w-16 h-16 text-indigo-100 mx-auto mb-6" />
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Screen Time Management</h3>
-            <p className="text-slate-500 max-w-sm mx-auto">This feature is currently in development. Soon you'll be able to set daily limits and downtime schedules.</p>
-          </div>
-        );
-
       default:
         return null;
     }
