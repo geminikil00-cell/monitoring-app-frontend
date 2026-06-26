@@ -4,6 +4,7 @@ account_id = "f3988ca02d5b5aef9e2514bc47beba9b"
 
 [assets]
 directory = "./dist"
+not_found_handling = "single-page-application"
 
 [vars]
 VITE_API_URL = "https://monitoring.joclass.com/api/v1"
