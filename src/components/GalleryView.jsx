@@ -1,40 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { Image as ImageIcon, Maximize2, X, Download, Calendar, Filter, ChevronDown, RefreshCw } from 'lucide-react';
+import { Image as ImageIcon, Maximize2, X, Download, Calendar, Filter, ChevronDown } from 'lucide-react';
 import dataService from '../services/dataService';
 import { useAuthContext } from '../context/AuthContext';
 
-function GalleryView({ selectedDevice }) {
+function GalleryView({ deviceId }) {
   const { token } = useAuthContext();
   const [selectedImage, setSelectedImage] = useState(null);
   const [mediaFiles, setMediaFiles] = useState([]);
   const [activeCategory, setActiveTab] = useState('All');
-  const [skip, setSkip] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Sync state with props if they change
   useEffect(() => {
-    const fetchInitial = async () => {
-      if (!selectedDevice || !token) {
-        setMediaFiles([]);
-        setIsInitialLoading(false);
-        return;
-      }
-      setIsInitialLoading(true);
-      try {
-        const res = await dataService.getDeviceMedia(token, selectedDevice.id, 0, 50, null);
-        setMediaFiles(res.data);
-        setSkip(res.data.length);
-        if (res.data.length < 50) setHasMore(false);
-      } catch (err) {
-        console.error('Failed to load gallery', err);
-      } finally {
-        setIsInitialLoading(false);
-      }
-    };
-    fetchInitial();
-  }, [selectedDevice, token]);
+    if (deviceId && token) {
+      setMediaFiles([]);
+      setHasMore(true);
+      fetchMedia(0, 'All');
+    }
+  }, [deviceId, token]);
+
+  const fetchMedia = async (skipCount = 0, category = 'All') => {
+    if (!token || !deviceId) return;
+    setIsLoading(true);
+    try {
+      const categoryParam = category === 'All' ? null : category;
+      const res = await dataService.getDeviceMedia(token, deviceId, skipCount, 50, categoryParam);
+      if (res.data.length < 50) setHasMore(false);
+      setMediaFiles(prev => skipCount === 0 ? res.data : [...prev, ...res.data]);
+    } catch (error) {
+      console.error('Error loading media:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const categories = ['All', ...new Set((mediaFiles || []).map(f => f.category).filter(Boolean))];
 
@@ -60,39 +58,12 @@ function GalleryView({ selectedDevice }) {
     return getFullImageUrl(key);
   };
 
-  const loadMore = async () => {
-    if (!token || !selectedDevice) return;
-    setIsLoadingMore(true);
-    try {
-      const categoryParam = activeCategory === 'All' ? null : activeCategory;
-      const res = await dataService.getDeviceMedia(token, selectedDevice.id, skip, 50, categoryParam);
-      if (res.data.length < 50) setHasMore(false);
-      setMediaFiles([...mediaFiles, ...res.data]);
-      setSkip(skip + res.data.length);
-    } catch (error) {
-      console.error('Error loading more media:', error);
-    } finally {
-      setIsLoadingMore(false);
-    }
+  const loadMore = () => {
+    fetchMedia(mediaFiles.length, activeCategory);
   };
 
-  const triggerRefresh = async () => {
-    if (!selectedDevice || !token) return;
-    try {
-      await dataService.sendCommand(token, selectedDevice.id, 'REFRESH_FILES');
-      alert('Requested gallery sync from device.');
-    } catch (err) {
-      console.error('Command failed', err);
-    }
-  };
-
-  if (isInitialLoading) {
-    return (
-      <div className="bg-white rounded-3xl p-16 text-center border border-slate-200 border-dashed animate-in fade-in duration-500 flex flex-col items-center justify-center">
-        <RefreshCw className="w-8 h-8 animate-spin text-indigo-500 mb-4" />
-        <h3 className="text-xl font-bold text-slate-900 mb-2">Loading Media</h3>
-      </div>
-    );
+  if (isLoading && mediaFiles.length === 0) {
+    return <div className="text-center p-10 animate-pulse text-slate-500 font-bold uppercase tracking-widest">Loading Gallery...</div>;
   }
 
   if (mediaFiles.length === 0) {
@@ -102,12 +73,9 @@ function GalleryView({ selectedDevice }) {
           <ImageIcon className="w-8 h-8" />
         </div>
         <h3 className="text-xl font-bold text-slate-900 mb-2">No Photos Found</h3>
-        <p className="text-slate-500 max-w-sm mx-auto font-medium mb-6">
+        <p className="text-slate-500 max-w-sm mx-auto font-medium">
           Once the child device requests and gets storage permission, captured media files and device pictures will automatically synchronize here.
         </p>
-        <button onClick={triggerRefresh} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-600/30 transition-all">
-          Force Sync Device Photos
-        </button>
       </div>
     );
   }
