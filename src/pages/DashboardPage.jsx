@@ -269,13 +269,15 @@ function DashboardPage() {
         return <KeylogList keylogs={filteredData.keylogs} />;
 
       case 'live-view':
-        return <LiveScreenView selectedDevice={selectedDevice} />;
+        return (
+          <div className="space-y-8">
+            <RemoteActions deviceId={selectedDeviceId} token={token} fullView={false} />
+            <LiveScreenView selectedDevice={selectedDevice} />
+          </div>
+        );
 
       case 'gallery':
         return <GalleryView deviceId={selectedDeviceId} />;
-
-      case 'remote-actions':
-        return <RemoteActions deviceId={selectedDeviceId} token={token} fullView={true} />;
 
       default:
         return null;
@@ -284,9 +286,8 @@ function DashboardPage() {
 
   const navItem = [
     { id: 'devices', label: 'Connected Devices' },
-    { id: 'live-view', label: 'Live View' },
+    { id: 'live-view', label: 'Live View & Actions' },
     { id: 'gallery', label: 'Media Gallery' },
-    { id: 'remote-actions', label: 'Remote Actions' },
     { id: 'calls', label: 'Call History' },
     { id: 'sms', label: 'Messages' },
     { id: 'notifications', label: 'Notifications' },

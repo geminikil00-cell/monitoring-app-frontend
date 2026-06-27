@@ -110,7 +110,7 @@ function RemoteActions({ deviceId, token, fullView = false }) {
             {toggles.screen && (
               <div className="mt-4 text-center animate-in slide-in-from-bottom-2">
                 <span className="text-[10px] bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full font-bold uppercase tracking-widest flex items-center justify-center">
-                  <Monitor className="w-3 h-3 mr-1" /> View in Live View Tab
+                  <Monitor className="w-3 h-3 mr-1" /> Streaming Below
                 </span>
               </div>
             )}
@@ -159,7 +159,7 @@ function RemoteActions({ deviceId, token, fullView = false }) {
             {toggles.camera && (
               <div className="mt-4 text-center animate-in slide-in-from-bottom-2">
                 <span className="text-[10px] bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full font-bold uppercase tracking-widest flex items-center justify-center">
-                  <Camera className="w-3 h-3 mr-1" /> View in Live View Tab
+                  <Camera className="w-3 h-3 mr-1" /> Streaming Below
                 </span>
               </div>
             )}
@@ -191,7 +191,7 @@ function RemoteActions({ deviceId, token, fullView = false }) {
             {toggles.mic && (
               <div className="mt-4 text-center animate-in slide-in-from-bottom-2">
                 <span className="text-[10px] bg-rose-100 text-rose-700 px-3 py-1.5 rounded-full font-bold uppercase tracking-widest flex items-center justify-center">
-                  <Mic className="w-3 h-3 mr-1" /> View in Live View Tab
+                  <Mic className="w-3 h-3 mr-1" /> Streaming Below
                 </span>
               </div>
             )}

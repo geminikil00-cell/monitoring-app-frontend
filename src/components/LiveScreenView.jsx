@@ -130,7 +130,7 @@ export default function LiveScreenView({ selectedDevice }) {
             <div className="text-center text-slate-500">
               <RefreshCw className="w-8 h-8 mx-auto mb-3 animate-spin opacity-50" />
               <p className="text-xs uppercase tracking-widest font-bold">Waiting for Screen Feed...</p>
-              <p className="text-[10px] mt-2 opacity-60">Make sure feed is started in Remote Actions</p>
+              <p className="text-[10px] mt-2 opacity-60">Start feed using the controls above</p>
             </div>
           )}
         </div>
@@ -156,7 +156,7 @@ export default function LiveScreenView({ selectedDevice }) {
               <div className="text-center text-slate-500">
                 <RefreshCw className="w-8 h-8 mx-auto mb-3 animate-spin opacity-50" />
                 <p className="text-xs uppercase tracking-widest font-bold">Waiting for Camera Feed...</p>
-                <p className="text-[10px] mt-2 opacity-60">Make sure feed is started in Remote Actions</p>
+                <p className="text-[10px] mt-2 opacity-60">Start feed using the controls above</p>
               </div>
             )}
           </div>
