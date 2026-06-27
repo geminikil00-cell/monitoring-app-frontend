@@ -107,6 +107,13 @@ function RemoteActions({ deviceId, token, fullView = false }) {
               {toggles.screen ? <Square className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
               {toggles.screen ? 'Stop Feed' : 'Start Feed'}
             </button>
+            {toggles.screen && (
+              <div className="mt-4 text-center animate-in slide-in-from-bottom-2">
+                <span className="text-[10px] bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full font-bold uppercase tracking-widest flex items-center justify-center">
+                  <Monitor className="w-3 h-3 mr-1" /> View in Live View Tab
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Camera Toggle */}
@@ -149,6 +156,13 @@ function RemoteActions({ deviceId, token, fullView = false }) {
               {toggles.camera ? <Square className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
               {toggles.camera ? 'Stop Feed' : 'Start Feed'}
             </button>
+            {toggles.camera && (
+              <div className="mt-4 text-center animate-in slide-in-from-bottom-2">
+                <span className="text-[10px] bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full font-bold uppercase tracking-widest flex items-center justify-center">
+                  <Camera className="w-3 h-3 mr-1" /> View in Live View Tab
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Mic Toggle */}
@@ -174,6 +188,13 @@ function RemoteActions({ deviceId, token, fullView = false }) {
               {toggles.mic ? <Square className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
               {toggles.mic ? 'Stop Feed' : 'Start Feed'}
             </button>
+            {toggles.mic && (
+              <div className="mt-4 text-center animate-in slide-in-from-bottom-2">
+                <span className="text-[10px] bg-rose-100 text-rose-700 px-3 py-1.5 rounded-full font-bold uppercase tracking-widest flex items-center justify-center">
+                  <Mic className="w-3 h-3 mr-1" /> View in Live View Tab
+                </span>
+              </div>
+            )}
           </div>
           
         </div>
