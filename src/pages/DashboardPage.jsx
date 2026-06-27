@@ -108,7 +108,7 @@ function DashboardPage() {
     const lastSeenDate = new Date(lastSeen);
     const now = new Date();
     const diffMinutes = (now - lastSeenDate) / (1000 * 60);
-    return diffMinutes < 5 ? 'online' : 'offline';
+    return diffMinutes < 20 ? 'online' : 'offline';
   };
 
   const formatLastSeen = (lastSeen) => {
