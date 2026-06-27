@@ -60,8 +60,10 @@ const sendCommand = (token, deviceId, commandType) => {
   return axios.post(`${API_URL}/devices/${deviceId}/commands/`, { command_type: commandType }, getAuthHeaders(token));
 };
 
-const getDeviceMedia = (token, deviceId) => {
-  return axios.get(`${API_URL}/devices/${deviceId}/media/`, getAuthHeaders(token));
+const getDeviceMedia = (token, deviceId, skip = 0, limit = 50, category = null) => {
+  let url = `${API_URL}/devices/${deviceId}/media/?skip=${skip}&limit=${limit}`;
+  if (category) url += `&category=${category}`;
+  return axios.get(url, getAuthHeaders(token));
 };
 
 const deleteDevice = (token, deviceId) => {

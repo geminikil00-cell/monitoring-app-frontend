@@ -142,10 +142,10 @@ function GalleryView({ deviceId }) {
           <div className="mt-12 flex justify-center">
             <button
               onClick={loadMore}
-              disabled={isLoadingMore}
+              disabled={isLoading}
               className="px-10 py-4 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-3xl text-xs font-black uppercase tracking-[0.2em] transition-all flex items-center border border-slate-200"
             >
-              {isLoadingMore ? (
+              {isLoading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-slate-400 border-t-slate-900 rounded-full animate-spin mr-3"></div>
                   Indexing Library...
