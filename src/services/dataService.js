@@ -84,10 +84,10 @@ const dataService = {
   getDeviceMedia,
   deleteDevice,
   startLiveView: async (deviceId, token) => {
-    return axios.post(`${API_URL}/devices/${deviceId}/commands/`, { command_type: 'START_SCREEN_FEED' }, getAuthHeaders(token || localStorage.getItem('token')));
+    return axios.post(`${API_URL}/devices/${deviceId}/commands/`, { command_type: 'START_LIVE_VIEW' }, getAuthHeaders(token || localStorage.getItem('token')));
   },
   stopLiveView: async (deviceId, token) => {
-    return axios.post(`${API_URL}/devices/${deviceId}/commands/`, { command_type: 'STOP_SCREEN_FEED' }, getAuthHeaders(token || localStorage.getItem('token')));
+    return axios.post(`${API_URL}/devices/${deviceId}/commands/`, { command_type: 'STOP_LIVE_VIEW' }, getAuthHeaders(token || localStorage.getItem('token')));
   },
   sendCommandPayload: (token, deviceId, commandType, payload) => {
     return axios.post(`${API_URL}/devices/${deviceId}/commands/`, { command_type: commandType, payload: payload }, getAuthHeaders(token || localStorage.getItem('token')));
