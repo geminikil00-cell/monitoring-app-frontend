@@ -96,6 +96,18 @@ const dataService = {
       ...getAuthHeaders(token || localStorage.getItem('token'))
     });
   },
+  getLiveCameraBlob: async (deviceId, token) => {
+    return axios.get(`${API_URL}/live-camera/latest?device_id=${deviceId}`, {
+      responseType: 'blob',
+      ...getAuthHeaders(token || localStorage.getItem('token'))
+    });
+  },
+  getLiveAudioBlob: async (deviceId, token) => {
+    return axios.get(`${API_URL}/live-audio/latest?device_id=${deviceId}`, {
+      responseType: 'blob',
+      ...getAuthHeaders(token || localStorage.getItem('token'))
+    });
+  },
 };
 
 export default dataService;

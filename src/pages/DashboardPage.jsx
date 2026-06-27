@@ -13,6 +13,7 @@ import NotificationList from '../components/NotificationList';
 import InstalledAppList from '../components/InstalledAppList';
 import KeylogList from '../components/KeylogList';
 import LiveScreenView from '../components/LiveScreenView';
+import GalleryView from '../components/GalleryView';
 import { 
   PhoneCall, 
   MessageSquare, 
@@ -132,7 +133,7 @@ function DashboardPage() {
     locations: data.locations.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
     installedApps: data.installedApps.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
     notifications: data.notifications.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
-    keylogs: (data.keylogs || []).filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
+    keylogs: (data.keylogs || []).filter(item => !selectedDeviceId || item.device_id === selectedDeviceId)
   };
 
   const renderContent = () => {
@@ -269,6 +270,9 @@ function DashboardPage() {
       case 'live-view':
         return <LiveScreenView selectedDevice={selectedDevice} />;
 
+      case 'gallery':
+        return <GalleryView selectedDevice={selectedDevice} />;
+
       default:
         return null;
     }
@@ -277,6 +281,7 @@ function DashboardPage() {
   const navItem = [
     { id: 'devices', label: 'Connected Devices' },
     { id: 'live-view', label: 'Live View' },
+    { id: 'gallery', label: 'Media Gallery' },
     { id: 'calls', label: 'Call History' },
     { id: 'sms', label: 'Messages' },
     { id: 'notifications', label: 'Notifications' },

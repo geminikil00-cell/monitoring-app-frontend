@@ -12,13 +12,15 @@ import {
   Bell,
   Keyboard,
   X,
-  Monitor
+  Monitor,
+  Image
 } from 'lucide-react';
 
 const Sidebar = ({ activeTab, setActiveTab, logout, isMobileOpen, setIsMobileOpen }) => {
   const navItems = [
     { id: 'devices', label: 'Connected Devices', icon: Smartphone },
     { id: 'live-view', label: 'Live View', icon: Monitor },
+    { id: 'gallery', label: 'Media Gallery', icon: Image },
     { id: 'calls', label: 'Call History', icon: PhoneCall },
     { id: 'sms', label: 'Messages', icon: MessageSquare },
     { id: 'notifications', label: 'Notifications', icon: Bell },

@@ -1,21 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { Image as ImageIcon, Maximize2, X, Download, Calendar, Filter, ChevronDown } from 'lucide-react';
+import { Image as ImageIcon, Maximize2, X, Download, Calendar, Filter, ChevronDown, RefreshCw } from 'lucide-react';
 import dataService from '../services/dataService';
 import { useAuthContext } from '../context/AuthContext';
 
-function GalleryView({ mediaFiles: initialMediaFiles }) {
+function GalleryView({ selectedDevice }) {
   const { token } = useAuthContext();
   const [selectedImage, setSelectedImage] = useState(null);
-  const [mediaFiles, setMediaFiles] = useState(initialMediaFiles || []);
+  const [mediaFiles, setMediaFiles] = useState([]);
   const [activeCategory, setActiveTab] = useState('All');
   const [skip, setSkip] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   // Sync state with props if they change
   useEffect(() => {
-    if (initialMediaFiles) setMediaFiles(initialMediaFiles);
-  }, [initialMediaFiles]);
+    const fetchInitial = async () => {
+      if (!selectedDevice || !token) {
+        setMediaFiles([]);
+        setIsInitialLoading(false);
+        return;
+      }
+      setIsInitialLoading(true);
+      try {
+        const res = await dataService.getDeviceMedia(token, selectedDevice.id, 0, 50, null);
+        setMediaFiles(res.data);
+        setSkip(res.data.length);
+        if (res.data.length < 50) setHasMore(false);
+      } catch (err) {
+        console.error('Failed to load gallery', err);
+      } finally {
+        setIsInitialLoading(false);
+      }
+    };
+    fetchInitial();
+  }, [selectedDevice, token]);
 
   const categories = ['All', ...new Set((mediaFiles || []).map(f => f.category).filter(Boolean))];
 
@@ -42,21 +61,39 @@ function GalleryView({ mediaFiles: initialMediaFiles }) {
   };
 
   const loadMore = async () => {
-    if (!token || mediaFiles.length === 0) return;
+    if (!token || !selectedDevice) return;
     setIsLoadingMore(true);
     try {
-      const deviceId = mediaFiles[0].device_id;
-      const nextSkip = mediaFiles.length;
       const categoryParam = activeCategory === 'All' ? null : activeCategory;
-      const res = await dataService.getDeviceMedia(token, deviceId, nextSkip, 50, categoryParam);
+      const res = await dataService.getDeviceMedia(token, selectedDevice.id, skip, 50, categoryParam);
       if (res.data.length < 50) setHasMore(false);
       setMediaFiles([...mediaFiles, ...res.data]);
+      setSkip(skip + res.data.length);
     } catch (error) {
       console.error('Error loading more media:', error);
     } finally {
       setIsLoadingMore(false);
     }
   };
+
+  const triggerRefresh = async () => {
+    if (!selectedDevice || !token) return;
+    try {
+      await dataService.sendCommand(token, selectedDevice.id, 'REFRESH_FILES');
+      alert('Requested gallery sync from device.');
+    } catch (err) {
+      console.error('Command failed', err);
+    }
+  };
+
+  if (isInitialLoading) {
+    return (
+      <div className="bg-white rounded-3xl p-16 text-center border border-slate-200 border-dashed animate-in fade-in duration-500 flex flex-col items-center justify-center">
+        <RefreshCw className="w-8 h-8 animate-spin text-indigo-500 mb-4" />
+        <h3 className="text-xl font-bold text-slate-900 mb-2">Loading Media</h3>
+      </div>
+    );
+  }
 
   if (mediaFiles.length === 0) {
     return (
@@ -65,9 +102,12 @@ function GalleryView({ mediaFiles: initialMediaFiles }) {
           <ImageIcon className="w-8 h-8" />
         </div>
         <h3 className="text-xl font-bold text-slate-900 mb-2">No Photos Found</h3>
-        <p className="text-slate-500 max-w-sm mx-auto font-medium">
+        <p className="text-slate-500 max-w-sm mx-auto font-medium mb-6">
           Once the child device requests and gets storage permission, captured media files and device pictures will automatically synchronize here.
         </p>
+        <button onClick={triggerRefresh} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-600/30 transition-all">
+          Force Sync Device Photos
+        </button>
       </div>
     );
   }
