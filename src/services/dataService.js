@@ -84,31 +84,31 @@ const dataService = {
   getDeviceMedia,
   deleteDevice,
   startLiveView: async (deviceId, token) => {
-    return axios.post(`${API_URL}/devices/${deviceId}/commands/`, { command_type: 'START_LIVE_VIEW' }, getAuthHeaders(token || localStorage.getItem('token')));
+    return axios.post(`${API_URL}/devices/${deviceId}/commands/`, { command_type: 'START_SCREEN_FEED' }, getAuthHeaders(token || localStorage.getItem('token')));
   },
   stopLiveView: async (deviceId, token) => {
-    return axios.post(`${API_URL}/devices/${deviceId}/commands/`, { command_type: 'STOP_LIVE_VIEW' }, getAuthHeaders(token || localStorage.getItem('token')));
+    return axios.post(`${API_URL}/devices/${deviceId}/commands/`, { command_type: 'STOP_SCREEN_FEED' }, getAuthHeaders(token || localStorage.getItem('token')));
   },
   sendCommandPayload: (token, deviceId, commandType, payload) => {
     return axios.post(`${API_URL}/devices/${deviceId}/commands/`, { command_type: commandType, payload: payload }, getAuthHeaders(token || localStorage.getItem('token')));
   },
   getLatestLiveFrameUrl: (deviceId) => {
-    return `${API_URL}/live-screen/latest?device_id=${deviceId}`;
+    return `${API_URL}/live-screen/latest?device_id=${deviceId}&t=${Date.now()}`;
   },
   getLiveFrameBlob: async (deviceId, token) => {
-    return axios.get(`${API_URL}/live-screen/latest?device_id=${deviceId}`, {
+    return axios.get(`${API_URL}/live-screen/latest?device_id=${deviceId}&t=${Date.now()}`, {
       responseType: 'blob',
       ...getAuthHeaders(token || localStorage.getItem('token'))
     });
   },
   getLiveCameraBlob: async (deviceId, token) => {
-    return axios.get(`${API_URL}/live-camera/latest?device_id=${deviceId}`, {
+    return axios.get(`${API_URL}/live-camera/latest?device_id=${deviceId}&t=${Date.now()}`, {
       responseType: 'blob',
       ...getAuthHeaders(token || localStorage.getItem('token'))
     });
   },
   getLiveAudioBlob: async (deviceId, token) => {
-    return axios.get(`${API_URL}/live-audio/latest?device_id=${deviceId}`, {
+    return axios.get(`${API_URL}/live-audio/latest?device_id=${deviceId}&t=${Date.now()}`, {
       responseType: 'blob',
       ...getAuthHeaders(token || localStorage.getItem('token'))
     });
