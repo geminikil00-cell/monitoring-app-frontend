@@ -20,10 +20,12 @@ export default function LiveScreenView({ selectedDevice, toggles }) {
   useEffect(() => {
     if (!selectedDevice || !token || !toggles?.screen) return;
     
-    screenIntervalRef.current = setInterval(async () => {
+    let isMounted = true;
+    const poll = async () => {
+      if (!isMounted) return;
       try {
         const res = await dataService.getLiveFrameBlob(selectedDevice.id, token);
-        if (res && res.status === 200 && res.data.size > 0) {
+        if (isMounted && res && res.status === 200 && res.data.size > 0) {
           const objUrl = URL.createObjectURL(res.data);
           setScreenSrc(prev => { if (prev) URL.revokeObjectURL(prev); return objUrl; });
         }
@@ -34,19 +36,29 @@ export default function LiveScreenView({ selectedDevice, toggles }) {
           console.error(err);
         }
       }
-    }, 500);
+      if (isMounted) {
+        screenIntervalRef.current = setTimeout(poll, 500);
+      }
+    };
 
-    return () => clearInterval(screenIntervalRef.current);
+    poll();
+
+    return () => {
+      isMounted = false;
+      if (screenIntervalRef.current) clearTimeout(screenIntervalRef.current);
+    };
   }, [selectedDevice, token, toggles?.screen]);
 
   // Camera Polling
   useEffect(() => {
     if (!selectedDevice || !token || !toggles?.camera) return;
     
-    cameraIntervalRef.current = setInterval(async () => {
+    let isMounted = true;
+    const poll = async () => {
+      if (!isMounted) return;
       try {
         const res = await dataService.getLiveCameraBlob(selectedDevice.id, token);
-        if (res && res.status === 200 && res.data.size > 0) {
+        if (isMounted && res && res.status === 200 && res.data.size > 0) {
           const objUrl = URL.createObjectURL(res.data);
           setCameraSrc(prev => { if (prev) URL.revokeObjectURL(prev); return objUrl; });
         }
@@ -57,10 +69,20 @@ export default function LiveScreenView({ selectedDevice, toggles }) {
           console.error(err);
         }
       }
-    }, 200);
+      if (isMounted) {
+        cameraIntervalRef.current = setTimeout(poll, 200);
+      }
+    };
 
-    return () => clearInterval(cameraIntervalRef.current);
+    poll();
+
+    return () => {
+      isMounted = false;
+      if (cameraIntervalRef.current) clearTimeout(cameraIntervalRef.current);
+    };
   }, [selectedDevice, token, toggles?.camera]);
+
+  const audioPlayingRef = useRef(false);
 
   // Audio Playback
   const initAudio = () => {
@@ -71,16 +93,20 @@ export default function LiveScreenView({ selectedDevice, toggles }) {
       audioContextRef.current.resume();
     }
     setIsAudioPlaying(true);
+    audioPlayingRef.current = true;
     setAudioError(null);
     nextAudioTimeRef.current = audioContextRef.current.currentTime;
     
-    audioIntervalRef.current = setInterval(async () => {
-      if (!selectedDevice || !token) return;
+    if (audioIntervalRef.current) clearTimeout(audioIntervalRef.current);
+
+    const poll = async () => {
+      if (!audioPlayingRef.current || !selectedDevice || !token) return;
       try {
         const res = await dataService.getLiveAudioBlob(selectedDevice.id, token);
-        if (res && res.status === 200 && res.data.size > 0) {
+        if (audioPlayingRef.current && res && res.status === 200 && res.data.size > 0) {
           const arrayBuffer = await res.data.arrayBuffer();
           audioContextRef.current.decodeAudioData(arrayBuffer, (buffer) => {
+            if (!audioPlayingRef.current) return;
             const source = audioContextRef.current.createBufferSource();
             source.buffer = buffer;
             source.connect(audioContextRef.current.destination);
@@ -91,8 +117,7 @@ export default function LiveScreenView({ selectedDevice, toggles }) {
             nextAudioTimeRef.current = playTime + buffer.duration;
             setAudioError(null);
           }, (err) => {
-             // Decode error can happen if format isn't supported natively
-             setAudioError("Unsupported audio format or empty buffer");
+             if (audioPlayingRef.current) setAudioError("Unsupported audio format or empty buffer");
           });
         }
       } catch (err) {
@@ -102,13 +127,18 @@ export default function LiveScreenView({ selectedDevice, toggles }) {
           console.error(err);
         }
       }
-    }, 200);
+      if (audioPlayingRef.current) {
+        audioIntervalRef.current = setTimeout(poll, 200);
+      }
+    };
+    
+    poll();
   };
 
-  
   const stopAudio = () => {
     setIsAudioPlaying(false);
-    if (audioIntervalRef.current) clearInterval(audioIntervalRef.current);
+    audioPlayingRef.current = false;
+    if (audioIntervalRef.current) clearTimeout(audioIntervalRef.current);
     if (audioContextRef.current) {
       audioContextRef.current.suspend();
     }
