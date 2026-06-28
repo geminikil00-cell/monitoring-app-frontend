@@ -34,7 +34,7 @@ export default function LiveScreenView({ selectedDevice, toggles }) {
           console.error(err);
         }
       }
-    }, 1500);
+    }, 500);
 
     return () => clearInterval(screenIntervalRef.current);
   }, [selectedDevice, token, toggles?.screen]);
@@ -57,7 +57,7 @@ export default function LiveScreenView({ selectedDevice, toggles }) {
           console.error(err);
         }
       }
-    }, 500);
+    }, 200);
 
     return () => clearInterval(cameraIntervalRef.current);
   }, [selectedDevice, token, toggles?.camera]);
@@ -102,7 +102,7 @@ export default function LiveScreenView({ selectedDevice, toggles }) {
           console.error(err);
         }
       }
-    }, 1000);
+    }, 200);
   };
 
   
