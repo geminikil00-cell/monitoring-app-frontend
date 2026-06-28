@@ -47,7 +47,7 @@ function RemoteActions({ deviceId, token, fullView = false, toggles, setToggles 
     if (!deviceId) return;
     setStatus({ loading: true, message: `Requesting screenshot...`, type: 'info' });
     try {
-      await dataService.sendCommandPayload(token, deviceId, 'SCREENSHOT', null);
+      await dataService.sendCommandPayload(token, deviceId, 'TAKE_SCREENSHOT', null);
       showStatus('Screenshot requested silently.', 'success');
     } catch (error) {
       showStatus('Failed to request screenshot.', 'error');
@@ -137,6 +137,25 @@ function RemoteActions({ deviceId, token, fullView = false, toggles, setToggles 
                  className={`flex-1 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${cameraFacing === 'BACK' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
                >
                  Back
+               </button>
+            </div>
+
+            <div className="flex bg-slate-100 rounded-xl p-1 mb-4">
+               <button 
+                 disabled={toggles.camera || status.loading}
+                 onClick={async () => {
+                   if (!deviceId) return;
+                   setStatus({ loading: true, message: `Requesting photo...`, type: 'info' });
+                   try {
+                     await dataService.sendCommandPayload(token, deviceId, 'TAKE_PHOTO', cameraFacing);
+                     showStatus('Photo requested. It will appear in Gallery.', 'success');
+                   } catch (error) {
+                     showStatus('Failed to request photo.', 'error');
+                   }
+                 }}
+                 className="w-full py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+               >
+                 Take Photo
                </button>
             </div>
 

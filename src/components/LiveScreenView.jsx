@@ -148,8 +148,15 @@ export default function LiveScreenView({ selectedDevice, toggles }) {
     return () => {
       if (audioIntervalRef.current) clearInterval(audioIntervalRef.current);
       if (audioContextRef.current) audioContextRef.current.close();
+      
+      // Stop all feeds when navigating away
+      if (selectedDevice && token) {
+        if (toggles?.screen) dataService.stopLiveView(selectedDevice.id, token).catch(() => {});
+        if (toggles?.camera) dataService.sendCommandPayload(token, selectedDevice.id, 'STOP_CAMERA_FEED', null).catch(() => {});
+        if (toggles?.mic) dataService.sendCommandPayload(token, selectedDevice.id, 'STOP_MIC_FEED', null).catch(() => {});
+      }
     };
-  }, []);
+  }, [selectedDevice, token, toggles]);
 
   useEffect(() => {
     if (toggles && !toggles.mic) {
