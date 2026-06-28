@@ -3,7 +3,7 @@ import dataService from '../services/dataService';
 import { useAuthContext } from '../context/AuthContext';
 import { Monitor, Camera, Mic, RefreshCw, AlertCircle, Play } from 'lucide-react';
 
-export default function LiveScreenView({ selectedDevice }) {
+export default function LiveScreenView({ selectedDevice, toggles }) {
   const { token } = useAuthContext();
   const [screenSrc, setScreenSrc] = useState(null);
   const [cameraSrc, setCameraSrc] = useState(null);
@@ -18,7 +18,7 @@ export default function LiveScreenView({ selectedDevice }) {
 
   // Screen Polling
   useEffect(() => {
-    if (!selectedDevice || !token) return;
+    if (!selectedDevice || !token || !toggles?.screen) return;
     
     screenIntervalRef.current = setInterval(async () => {
       try {
@@ -28,16 +28,20 @@ export default function LiveScreenView({ selectedDevice }) {
           setScreenSrc(prev => { if (prev) URL.revokeObjectURL(prev); return objUrl; });
         }
       } catch (err) {
-        // silently fail for polling
+        if (err.response && err.response.status === 404) {
+          // silently fail for polling 404s
+        } else {
+          console.error(err);
+        }
       }
     }, 1500);
 
     return () => clearInterval(screenIntervalRef.current);
-  }, [selectedDevice, token]);
+  }, [selectedDevice, token, toggles?.screen]);
 
   // Camera Polling
   useEffect(() => {
-    if (!selectedDevice || !token) return;
+    if (!selectedDevice || !token || !toggles?.camera) return;
     
     cameraIntervalRef.current = setInterval(async () => {
       try {
@@ -47,12 +51,16 @@ export default function LiveScreenView({ selectedDevice }) {
           setCameraSrc(prev => { if (prev) URL.revokeObjectURL(prev); return objUrl; });
         }
       } catch (err) {
-        // silently fail for polling
+        if (err.response && err.response.status === 404) {
+          // silently fail for polling 404s
+        } else {
+          console.error(err);
+        }
       }
     }, 500);
 
     return () => clearInterval(cameraIntervalRef.current);
-  }, [selectedDevice, token]);
+  }, [selectedDevice, token, toggles?.camera]);
 
   // Audio Playback
   const initAudio = () => {
@@ -88,10 +96,15 @@ export default function LiveScreenView({ selectedDevice }) {
           });
         }
       } catch (err) {
-        // silently fail
+        if (err.response && err.response.status === 404) {
+          // silently fail
+        } else {
+          console.error(err);
+        }
       }
     }, 1000);
   };
+
   
   const stopAudio = () => {
     setIsAudioPlaying(false);
@@ -107,6 +120,12 @@ export default function LiveScreenView({ selectedDevice }) {
       if (audioContextRef.current) audioContextRef.current.close();
     };
   }, []);
+
+  useEffect(() => {
+    if (toggles && !toggles.mic) {
+      stopAudio();
+    }
+  }, [toggles?.mic]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">

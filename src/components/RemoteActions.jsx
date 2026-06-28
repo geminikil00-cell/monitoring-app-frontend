@@ -2,14 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Camera, Mic, Monitor, Video, ShieldAlert, CheckCircle2, AlertCircle, Play, Square, SwitchCamera, Download } from 'lucide-react';
 import dataService from '../services/dataService';
 
-function RemoteActions({ deviceId, token, fullView = false }) {
+function RemoteActions({ deviceId, token, fullView = false, toggles, setToggles }) {
   const [status, setStatus] = useState({ loading: false, message: '', type: '' });
-  
-  const [toggles, setToggles] = useState({
-    screen: false,
-    camera: false,
-    mic: false
-  });
   
   const [cameraFacing, setCameraFacing] = useState('FRONT'); // FRONT or BACK
 

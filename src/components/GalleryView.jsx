@@ -54,8 +54,14 @@ function GalleryView({ deviceId }) {
   };
 
   const getThumbnailUrl = (img) => {
-    const key = img.thumbnail_key || img.s3_key;
-    return getFullImageUrl(key);
+    return img.url;
+  };
+
+  const handleCategoryChange = (cat) => {
+    setActiveTab(cat);
+    setMediaFiles([]);
+    setHasMore(true);
+    fetchMedia(0, cat);
   };
 
   const loadMore = () => {
@@ -93,7 +99,7 @@ function GalleryView({ deviceId }) {
             {categories.map(cat => (
               <button
                 key={cat}
-                onClick={() => setActiveTab(cat)}
+                onClick={() => handleCategoryChange(cat)}
                 className={`px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${
                   activeCategory === cat 
                   ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/20' 
@@ -186,7 +192,7 @@ function GalleryView({ deviceId }) {
               </div>
               <div className="flex items-center space-x-3">
                 <a
-                  href={getFullImageUrl(selectedImage.s3_key)}
+                  href={selectedImage.url}
                   download={selectedImage.file_name}
                   target="_blank"
                   rel="noreferrer"
@@ -205,7 +211,7 @@ function GalleryView({ deviceId }) {
 
             <div className="flex-1 bg-slate-50 flex items-center justify-center p-6 overflow-hidden">
               <img
-                src={getFullImageUrl(selectedImage.s3_key)}
+                src={selectedImage.url}
                 alt={selectedImage.file_name}
                 className="max-w-full max-h-[60vh] object-contain rounded-3xl shadow-2xl"
               />

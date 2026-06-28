@@ -50,6 +50,12 @@ function DashboardPage() {
   });
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  const [toggles, setToggles] = useState({
+    screen: false,
+    camera: false,
+    mic: false
+  });
+
   useEffect(() => {
     if (token) {
       setIsLoading(true);
@@ -271,8 +277,8 @@ function DashboardPage() {
       case 'live-view':
         return (
           <div className="space-y-8">
-            <RemoteActions deviceId={selectedDeviceId} token={token} fullView={false} />
-            <LiveScreenView selectedDevice={selectedDevice} />
+            <RemoteActions deviceId={selectedDeviceId} token={token} fullView={false} toggles={toggles} setToggles={setToggles} />
+            <LiveScreenView selectedDevice={selectedDevice} toggles={toggles} />
           </div>
         );
 
