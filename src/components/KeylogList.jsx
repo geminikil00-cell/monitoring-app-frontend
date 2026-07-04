@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuthContext } from '../context/AuthContext';
 import dataService from '../services/dataService';
-import { Keyboard, Clock, ChevronDown } from 'lucide-react';
+import { Keyboard, Clock, ChevronDown, Filter } from 'lucide-react';
 
 const PAGE_SIZE = 100;
 
@@ -11,6 +11,7 @@ function KeylogList({ deviceId }) {
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [selectedApp, setSelectedApp] = useState('All');
 
   const formatTime = (timestamp) => {
     const date = new Date(timestamp < 10000000000 ? timestamp * 1000 : timestamp);
@@ -37,36 +38,58 @@ function KeylogList({ deviceId }) {
       setKeylogs([]);
       setHasMore(true);
       setInitialLoading(true);
+      setSelectedApp('All');
       fetchKeylogs(0, false);
     }
   }, [deviceId, token, fetchKeylogs]);
 
   const loadMore = () => fetchKeylogs(keylogs.length, true);
 
+  const uniqueApps = ['All', ...new Set(keylogs.map(k => k.package_name).filter(Boolean))];
+  const filteredKeylogs = selectedApp === 'All' ? keylogs : keylogs.filter(k => k.package_name === selectedApp);
+
   return (
     <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in duration-500">
-      <div className="p-8 border-b border-slate-100 flex justify-between items-center">
-        <div>
-          <h3 className="text-xl font-bold text-slate-900">Keystroke Logger</h3>
-          <p className="text-sm text-slate-500 mt-1 font-medium">Live captured text inputs across all applications</p>
+      <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600">
+            <Keyboard className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">Keystroke Logger</h3>
+            <p className="text-sm text-slate-500 mt-1 font-medium">Live captured text inputs across all applications</p>
+          </div>
         </div>
-        <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600">
-          <Keyboard className="w-6 h-6" />
-        </div>
+        {!initialLoading && keylogs.length > 0 && (
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-slate-400" />
+            <select
+              value={selectedApp}
+              onChange={(e) => setSelectedApp(e.target.value)}
+              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            >
+              {uniqueApps.map(app => (
+                <option key={app} value={app}>{app === 'All' ? 'All Apps' : app}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {initialLoading ? (
         <div className="flex justify-center py-16">
           <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
         </div>
-      ) : keylogs.length === 0 ? (
+      ) : filteredKeylogs.length === 0 ? (
         <div className="p-20 text-center text-slate-400">
           <Keyboard className="w-12 h-12 mx-auto mb-4 opacity-20" />
-          <p className="font-bold tracking-widest text-xs uppercase">No keystrokes recorded yet</p>
+          <p className="font-bold tracking-widest text-xs uppercase">
+            {selectedApp === 'All' ? 'No keystrokes recorded yet' : 'No keystrokes for this app'}
+          </p>
         </div>
       ) : (
         <div className="divide-y divide-slate-50 max-h-[600px] overflow-y-auto">
-          {keylogs.map((log) => {
+          {filteredKeylogs.map((log) => {
             return (
               <div key={log.id} className="p-6 hover:bg-slate-50 transition-colors group">
                 <div className="flex items-start">
