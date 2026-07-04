@@ -38,7 +38,7 @@ function GalleryView({ deviceId }) {
 
   const filteredImages = (mediaFiles || []).filter(
     (file) => {
-      const isImage = file.file_type === 'IMAGE' || file.file_name.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+      const isImage = file.file_type?.startsWith('image/') || file.file_type === 'IMAGE' || (file.file_name || file.s3_key || '').match(/\.(jpg|jpeg|png|gif|webp)$/i);
       const matchesCategory = activeCategory === 'All' || file.category === activeCategory;
       return isImage && matchesCategory;
     }
