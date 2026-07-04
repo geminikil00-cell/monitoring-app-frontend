@@ -1,11 +1,47 @@
-import React from 'react';
-import { Keyboard, Clock } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAuthContext } from '../context/AuthContext';
+import dataService from '../services/dataService';
+import { Keyboard, Clock, ChevronDown } from 'lucide-react';
 
-function KeylogList({ keylogs = [] }) {
+const PAGE_SIZE = 100;
+
+function KeylogList({ deviceId }) {
+  const { token } = useAuthContext();
+  const [keylogs, setKeylogs] = useState([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+
   const formatTime = (timestamp) => {
     const date = new Date(timestamp < 10000000000 ? timestamp * 1000 : timestamp);
     return date.toLocaleString();
   };
+
+  const fetchKeylogs = useCallback(async (skip, append = false) => {
+    if (!token || !deviceId) return;
+    setIsLoading(true);
+    try {
+      const res = await dataService.getKeylogs(token, skip, PAGE_SIZE, deviceId);
+      if (res.data.length < PAGE_SIZE) setHasMore(false);
+      setKeylogs(prev => append ? [...prev, ...res.data] : res.data);
+    } catch (error) {
+      console.error('Error loading keylogs:', error);
+    } finally {
+      setIsLoading(false);
+      setInitialLoading(false);
+    }
+  }, [token, deviceId]);
+
+  useEffect(() => {
+    if (deviceId && token) {
+      setKeylogs([]);
+      setHasMore(true);
+      setInitialLoading(true);
+      fetchKeylogs(0, false);
+    }
+  }, [deviceId, token, fetchKeylogs]);
+
+  const loadMore = () => fetchKeylogs(keylogs.length, true);
 
   return (
     <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in duration-500">
@@ -18,15 +54,19 @@ function KeylogList({ keylogs = [] }) {
           <Keyboard className="w-6 h-6" />
         </div>
       </div>
-      
-      <div className="divide-y divide-slate-50 max-h-[600px] overflow-y-auto">
-        {keylogs.length === 0 ? (
-          <div className="p-20 text-center text-slate-400">
-            <Keyboard className="w-12 h-12 mx-auto mb-4 opacity-20" />
-            <p className="font-bold tracking-widest text-xs uppercase">No keystrokes recorded yet</p>
-          </div>
-        ) : (
-          keylogs.map((log) => {
+
+      {initialLoading ? (
+        <div className="flex justify-center py-16">
+          <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+        </div>
+      ) : keylogs.length === 0 ? (
+        <div className="p-20 text-center text-slate-400">
+          <Keyboard className="w-12 h-12 mx-auto mb-4 opacity-20" />
+          <p className="font-bold tracking-widest text-xs uppercase">No keystrokes recorded yet</p>
+        </div>
+      ) : (
+        <div className="divide-y divide-slate-50 max-h-[600px] overflow-y-auto">
+          {keylogs.map((log) => {
             return (
               <div key={log.id} className="p-6 hover:bg-slate-50 transition-colors group">
                 <div className="flex items-start">
@@ -49,9 +89,31 @@ function KeylogList({ keylogs = [] }) {
                 </div>
               </div>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
+
+      {hasMore && !initialLoading && keylogs.length > 0 && (
+        <div className="flex justify-center py-6 border-t border-slate-50">
+          <button
+            onClick={loadMore}
+            disabled={isLoading}
+            className="px-10 py-3 bg-white hover:bg-slate-50 text-slate-900 rounded-3xl text-xs font-black uppercase tracking-[0.2em] transition-all flex items-center border border-slate-200 shadow-sm"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-slate-400 border-t-slate-900 rounded-full animate-spin mr-3"></div>
+                Loading...
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-4 h-4 mr-2" />
+                Load More Keylogs
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

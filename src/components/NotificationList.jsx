@@ -1,20 +1,69 @@
-import React from 'react';
-import { Bell, Clock, Smartphone } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAuthContext } from '../context/AuthContext';
+import dataService from '../services/dataService';
+import { Bell, Clock, ChevronDown } from 'lucide-react';
 
-function NotificationList({ notifications, apps }) {
+const PAGE_SIZE = 100;
+
+function NotificationList({ deviceId }) {
+  const { token } = useAuthContext();
+  const [notifications, setNotifications] = useState([]);
+  const [apps, setApps] = useState([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+
   const formatTime = (timestamp) => {
     const date = new Date(timestamp < 10000000000 ? timestamp * 1000 : timestamp);
     return date.toLocaleString();
   };
 
   const getAppInfo = (packageName) => {
-    if (!apps) return { name: packageName, initial: packageName[0].toUpperCase() };
+    if (!apps) return { name: packageName, initial: packageName[0] ? packageName[0].toUpperCase() : '?' };
     const app = apps.find(a => a.package_name === packageName);
     if (app) {
-      return { name: app.app_name, initial: app.app_name[0].toUpperCase() };
+      return { name: app.app_name, initial: app.app_name[0] ? app.app_name[0].toUpperCase() : '?' };
     }
-    return { name: packageName, initial: packageName[0].toUpperCase() };
+    return { name: packageName, initial: packageName[0] ? packageName[0].toUpperCase() : '?' };
   };
+
+  const fetchApps = useCallback(async () => {
+    if (!token || !deviceId) return;
+    try {
+      const res = await dataService.getInstalledApps(token, 0, 500, deviceId);
+      setApps(res.data);
+    } catch (error) {
+      console.error('Error loading apps for notifications:', error);
+    }
+  }, [token, deviceId]);
+
+  const fetchNotifications = useCallback(async (skip, append = false) => {
+    if (!token || !deviceId) return;
+    setIsLoading(true);
+    try {
+      const res = await dataService.getNotifications(token, skip, PAGE_SIZE, deviceId);
+      if (res.data.length < PAGE_SIZE) setHasMore(false);
+      setNotifications(prev => append ? [...prev, ...res.data] : res.data);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    } finally {
+      setIsLoading(false);
+      setInitialLoading(false);
+    }
+  }, [token, deviceId]);
+
+  useEffect(() => {
+    if (deviceId && token) {
+      setNotifications([]);
+      setApps([]);
+      setHasMore(true);
+      setInitialLoading(true);
+      fetchApps();
+      fetchNotifications(0, false);
+    }
+  }, [deviceId, token, fetchApps, fetchNotifications]);
+
+  const loadMore = () => fetchNotifications(notifications.length, true);
 
   return (
     <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in duration-500">
@@ -27,15 +76,19 @@ function NotificationList({ notifications, apps }) {
           <Bell className="w-6 h-6" />
         </div>
       </div>
-      
-      <div className="divide-y divide-slate-50 max-h-[600px] overflow-y-auto">
-        {notifications.length === 0 ? (
-          <div className="p-20 text-center text-slate-400">
-            <Bell className="w-12 h-12 mx-auto mb-4 opacity-20" />
-            <p className="font-bold tracking-widest text-xs uppercase">No notifications captured yet</p>
-          </div>
-        ) : (
-          notifications.map((notif) => {
+
+      {initialLoading ? (
+        <div className="flex justify-center py-16">
+          <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+        </div>
+      ) : notifications.length === 0 ? (
+        <div className="p-20 text-center text-slate-400">
+          <Bell className="w-12 h-12 mx-auto mb-4 opacity-20" />
+          <p className="font-bold tracking-widest text-xs uppercase">No notifications captured yet</p>
+        </div>
+      ) : (
+        <div className="divide-y divide-slate-50 max-h-[600px] overflow-y-auto">
+          {notifications.map((notif) => {
             const appInfo = getAppInfo(notif.package_name);
             return (
               <div key={notif.id} className="p-6 hover:bg-slate-50 transition-colors group">
@@ -57,9 +110,31 @@ function NotificationList({ notifications, apps }) {
                 </div>
               </div>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
+
+      {hasMore && !initialLoading && notifications.length > 0 && (
+        <div className="flex justify-center py-6 border-t border-slate-50">
+          <button
+            onClick={loadMore}
+            disabled={isLoading}
+            className="px-10 py-3 bg-white hover:bg-slate-50 text-slate-900 rounded-3xl text-xs font-black uppercase tracking-[0.2em] transition-all flex items-center border border-slate-200 shadow-sm"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-slate-400 border-t-slate-900 rounded-full animate-spin mr-3"></div>
+                Loading...
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-4 h-4 mr-2" />
+                Load More Notifications
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

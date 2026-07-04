@@ -20,14 +20,10 @@ import {
   MessageSquare, 
   LayoutGrid, 
   Globe, 
-  Clock, 
   Smartphone,
   ChevronRight,
   Battery,
   Activity,
-  AlertTriangle,
-  Bell,
-  Zap,
   Trash2
 } from 'lucide-react';
 
@@ -38,15 +34,11 @@ function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [devices, setDevices] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
-  const [data, setData] = useState({
-    callLogs: [],
-    smsMessages: [],
-    appUsage: [],
-    webActivity: [],
-    locations: [],
-    installedApps: [],
-    notifications: [],
-    keylogs: []
+  const [dashboardStats, setDashboardStats] = useState({
+    callLogs: 0,
+    smsMessages: 0,
+    appUsage: 0,
+    webActivity: 0
   });
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -71,32 +63,24 @@ function DashboardPage() {
             }
           };
 
-          const [devices, calls, sms, apps, web, locs, installed, notifs, keylogs] = await Promise.all([
+          const [devs, calls, sms, apps, web] = await Promise.all([
             fetchSafe(dataService.getDevices(token)),
             fetchSafe(dataService.getCallLogs(token)),
             fetchSafe(dataService.getSmsMessages(token)),
             fetchSafe(dataService.getAppUsage(token)),
-            fetchSafe(dataService.getWebActivity(token)),
-            fetchSafe(dataService.getLocations(token)),
-            fetchSafe(dataService.getInstalledApps(token)),
-            fetchSafe(dataService.getNotifications(token)),
-            fetchSafe(dataService.getKeylogs(token))
+            fetchSafe(dataService.getWebActivity(token))
           ]);
           
-          setDevices(devices);
-          if (devices.length > 0 && !selectedDeviceId) {
-            setSelectedDeviceId(devices[0].id);
+          setDevices(devs);
+          if (devs.length > 0 && !selectedDeviceId) {
+            setSelectedDeviceId(devs[0].id);
           }
 
-          setData({
-            callLogs: calls,
-            smsMessages: sms,
-            appUsage: apps,
-            webActivity: web,
-            locations: locs,
-            installedApps: installed,
-            notifications: notifs,
-            keylogs: keylogs
+          setDashboardStats({
+            callLogs: calls.length,
+            smsMessages: sms.length,
+            appUsage: apps.length,
+            webActivity: web.length
           });
         } catch (error) {
           console.error('Error in fetchData:', error);
@@ -132,27 +116,16 @@ function DashboardPage() {
 
   const selectedDevice = devices.find(d => d.id === selectedDeviceId);
 
-  const filteredData = {
-    callLogs: data.callLogs.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
-    smsMessages: data.smsMessages.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
-    appUsage: data.appUsage.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
-    webActivity: data.webActivity.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
-    locations: data.locations.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
-    installedApps: data.installedApps.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
-    notifications: data.notifications.filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
-    keylogs: (data.keylogs || []).filter(item => !selectedDeviceId || item.device_id === selectedDeviceId),
-  };
-
   const renderContent = () => {
     switch (activeTab) {
       case 'devices':
         return (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatsCard label="Total Calls" value={filteredData.callLogs.length} icon={PhoneCall} color="bg-blue-50 text-blue-600" trend={12} />
-              <StatsCard label="Messages" value={filteredData.smsMessages.length} icon={MessageSquare} color="bg-purple-50 text-purple-600" trend={-5} />
-              <StatsCard label="Apps Tracked" value={filteredData.appUsage.length} icon={LayoutGrid} color="bg-pink-50 text-pink-600" />
-              <StatsCard label="Sites Visited" value={filteredData.webActivity.length} icon={Globe} color="bg-amber-50 text-amber-600" trend={24} />
+              <StatsCard label="Total Calls" value={dashboardStats.callLogs} icon={PhoneCall} color="bg-blue-50 text-blue-600" trend={12} />
+              <StatsCard label="Messages" value={dashboardStats.smsMessages} icon={MessageSquare} color="bg-purple-50 text-purple-600" trend={-5} />
+              <StatsCard label="Apps Tracked" value={dashboardStats.appUsage} icon={LayoutGrid} color="bg-pink-50 text-pink-600" />
+              <StatsCard label="Sites Visited" value={dashboardStats.webActivity} icon={Globe} color="bg-amber-50 text-amber-600" trend={24} />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-10">
@@ -240,39 +213,38 @@ function DashboardPage() {
         );
 
       case 'calls':
-        return <CallLogTable callLogs={filteredData.callLogs} />;
+        return <CallLogTable deviceId={selectedDeviceId} />;
 
       case 'sms':
-        return <SmsMessageTable smsMessages={filteredData.smsMessages} />;
+        return <SmsMessageTable deviceId={selectedDeviceId} />;
 
       case 'notifications':
-        return <NotificationList notifications={filteredData.notifications} apps={filteredData.installedApps} />;
+        return <NotificationList deviceId={selectedDeviceId} />;
 
       case 'location':
-        return <LocationMap locations={filteredData.locations} />;
+        return <LocationMap deviceId={selectedDeviceId} />;
 
       case 'apps':
         return (
           <div className="space-y-12">
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
-                <div className="flex justify-between items-start mb-8">
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 tracking-tight">App Usage Analytics</h3>
-                    <p className="text-sm text-slate-500 mt-1 font-medium">Daily breakdown of most used applications</p>
-                  </div>
+              <div className="flex justify-between items-start mb-8">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900 tracking-tight">App Usage Analytics</h3>
+                  <p className="text-sm text-slate-500 mt-1 font-medium">Daily breakdown of most used applications</p>
                 </div>
-                <AppUsageChart data={filteredData.appUsage} />
-             </div>
-             
-             <InstalledAppList apps={filteredData.installedApps} />
+              </div>
+              <AppUsageChart deviceId={selectedDeviceId} />
+            </div>
+            <InstalledAppList deviceId={selectedDeviceId} />
           </div>
         );
 
       case 'web':
-        return <WebActivityList activity={filteredData.webActivity} />;
+        return <WebActivityList deviceId={selectedDeviceId} />;
 
       case 'keylogs':
-        return <KeylogList keylogs={filteredData.keylogs} />;
+        return <KeylogList deviceId={selectedDeviceId} />;
 
       case 'live-view':
         return (
@@ -329,7 +301,6 @@ function DashboardPage() {
           )}
         </div>
 
-        {/* Floating Health Status */}
         <div className="absolute bottom-8 right-8 z-20">
           <div className="bg-white/80 backdrop-blur-md px-6 py-4 rounded-2xl shadow-2xl border border-slate-200 flex items-center space-x-4">
             <div className="flex items-center">
