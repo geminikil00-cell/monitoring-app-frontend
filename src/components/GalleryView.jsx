@@ -54,6 +54,8 @@ function GalleryView({ deviceId }) {
   };
 
   const getThumbnailUrl = (img) => {
+    if (!img.url) return getFullImageUrl(img.s3_key);
+    if (img.url.includes('mock.r2.cloudflarestorage.com')) return getFullImageUrl(img.s3_key);
     return img.url;
   };
 
@@ -192,7 +194,7 @@ function GalleryView({ deviceId }) {
               </div>
               <div className="flex items-center space-x-3">
                 <a
-                  href={selectedImage.url}
+                  href={getThumbnailUrl(selectedImage)}
                   download={selectedImage.file_name}
                   target="_blank"
                   rel="noreferrer"
@@ -211,7 +213,7 @@ function GalleryView({ deviceId }) {
 
             <div className="flex-1 bg-slate-50 flex items-center justify-center p-6 overflow-hidden">
               <img
-                src={selectedImage.url}
+                src={getThumbnailUrl(selectedImage)}
                 alt={selectedImage.file_name}
                 className="max-w-full max-h-[60vh] object-contain rounded-3xl shadow-2xl"
               />
