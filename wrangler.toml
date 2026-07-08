@@ -1,6 +1,7 @@
 name = "monitoring-app-frontend"
 compatibility_date = "2024-05-28"
 account_id = "f3988ca02d5b5aef9e2514bc47beba9b"
+pages_build_output_dir = "./dist"
 
 [assets]
 directory = "./dist"

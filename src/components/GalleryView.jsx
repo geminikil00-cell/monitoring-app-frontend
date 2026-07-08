@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Image as ImageIcon, Maximize2, X, Download, Calendar, Filter, ChevronDown } from 'lucide-react';
+import { Image as ImageIcon, Download, X, Calendar, ChevronDown } from 'lucide-react';
 import dataService from '../services/dataService';
 import { useAuthContext } from '../context/AuthContext';
+import VirtualizedPhotoGrid from './VirtualizedPhotoGrid';
+
+const CATEGORY_LABELS = {
+  camera: 'Camera', snapchat: 'Snapchat', whatsapp: 'WhatsApp', instagram: 'Instagram',
+  telegram: 'Telegram', messenger: 'Messenger', screenshot: 'Screenshot',
+  remote_camera: 'Remote Capture', gallery: 'Gallery',
+};
+const PHOTOS_PER_PAGE = 40;
 
 function GalleryView({ deviceId }) {
   const { token } = useAuthContext();
@@ -25,7 +33,7 @@ function GalleryView({ deviceId }) {
     setIsLoading(true);
     try {
       const categoryParam = category === 'All' ? null : category;
-      const res = await dataService.getDeviceMedia(token, deviceId, skipCount, 50, categoryParam);
+      const res = await dataService.getDeviceMedia(token, deviceId, skipCount, PHOTOS_PER_PAGE, categoryParam);
       const newData = res.data || [];
       if (skipCount === 0) {
         setMediaFiles(newData);
@@ -42,7 +50,7 @@ function GalleryView({ deviceId }) {
           });
         }
       }
-      if (newData.length < 50) setHasMore(false);
+      if (newData.length < PHOTOS_PER_PAGE) setHasMore(false);
     } catch (error) {
       console.error('Error loading media:', error);
     } finally {
@@ -52,27 +60,24 @@ function GalleryView({ deviceId }) {
 
   const categories = allCategories;
 
-  const filteredImages = (mediaFiles || []).filter(
-    (file) => {
-      const isImage = file.file_type?.startsWith('image/') || file.file_type === 'IMAGE' || (file.file_name || file.s3_key || '').match(/\.(jpg|jpeg|png|gif|webp)$/i);
-      const matchesCategory = activeCategory === 'All' || file.category === activeCategory;
-      return isImage && matchesCategory;
-    }
-  );
+  const filteredImages = (mediaFiles || []).filter((file) => {
+    const isImage = file.file_type?.startsWith('image/') || file.file_type === 'IMAGE' ||
+      (file.file_name || file.s3_key || '').match(/\.(jpg|jpeg|png|gif|webp)$/i);
+    const matchesCategory = activeCategory === 'All' || file.category === activeCategory;
+    return isImage && matchesCategory;
+  });
 
   const getFullImageUrl = (s3Key) => {
     if (!s3Key) return '';
     if (s3Key.startsWith('http')) return s3Key;
     const base = (import.meta.env.VITE_API_URL || 'https://monitoring.joclass.com/api/v1')
-      .replace(/\/api\/v1\/?$/, '')
-      .replace(/\/$/, '');
+      .replace(/\/api\/v1\/?$/, '').replace(/\/$/, '');
     return `${base}/static/${s3Key.replace(/^\//, '')}`;
   };
 
   const getThumbnailUrl = (img) => {
-    if (!img.url) return getFullImageUrl(img.s3_key);
+    if (!img.url || img.url.startsWith('/')) return getFullImageUrl(img.s3_key);
     if (img.url.includes('mock.r2.cloudflarestorage.com')) return getFullImageUrl(img.s3_key);
-    if (img.url.startsWith('/')) return getFullImageUrl(img.s3_key);
     return img.url;
   };
 
@@ -82,9 +87,7 @@ function GalleryView({ deviceId }) {
     fetchMedia(0, cat);
   };
 
-  const loadMore = () => {
-    fetchMedia(mediaFiles.length, activeCategory);
-  };
+  const loadMore = () => fetchMedia(mediaFiles.length, activeCategory);
 
   if (isLoading && mediaFiles.length === 0) {
     return <div className="text-center p-10 animate-pulse text-slate-500 font-bold uppercase tracking-widest">Loading Gallery...</div>;
@@ -112,63 +115,28 @@ function GalleryView({ deviceId }) {
             <h3 className="text-2xl font-black text-slate-900 tracking-tight">Photos & Gallery</h3>
             <p className="text-sm text-slate-500 mt-1 font-medium">Categorized view of device media library</p>
           </div>
-
           <div className="flex flex-wrap gap-2">
             {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => handleCategoryChange(cat)}
-                className={`px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${
-                  activeCategory === cat 
-                  ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/20' 
-                  : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
-                }`}
-              >
-                {cat}
+              <button key={cat} onClick={() => handleCategoryChange(cat)}
+                className={`px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${activeCategory === cat ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/20' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
+                {CATEGORY_LABELS[cat] || cat}
               </button>
             ))}
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-          {filteredImages.map((img) => (
-            <div
-              key={img.id}
-              className="group relative bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 aspect-square hover:shadow-2xl transition-all duration-500 cursor-pointer"       
-              onClick={() => setSelectedImage(img)}
-            >
-              <img
-                src={getThumbnailUrl(img)}
-                alt={img.file_name}
-                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-                loading="lazy"
-              />
-
-              <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-3">
-                <div className="flex justify-end">
-                  <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
-                    <Maximize2 className="w-4 h-4" />
-                  </div>
-                </div>
-
-                <div className="text-white backdrop-blur-md bg-black/30 p-2 rounded-xl border border-white/10">
-                  <p className="text-[9px] font-black uppercase tracking-tighter truncate">{img.file_name}</p>
-                  <p className="text-[8px] text-slate-300 mt-0.5 font-bold">
-                    {(img.size / 1024).toFixed(0)} KB • {img.category}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <VirtualizedPhotoGrid
+          photos={filteredImages}
+          getThumbnailUrl={getThumbnailUrl}
+          categoryLabels={CATEGORY_LABELS}
+          onPhotoClick={setSelectedImage}
+          cols={6}
+        />
 
         {hasMore && (
           <div className="mt-12 flex justify-center">
-            <button
-              onClick={loadMore}
-              disabled={isLoading}
-              className="px-10 py-4 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-3xl text-xs font-black uppercase tracking-[0.2em] transition-all flex items-center border border-slate-200"
-            >
+            <button onClick={loadMore} disabled={isLoading}
+              className="px-10 py-4 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-3xl text-xs font-black uppercase tracking-[0.2em] transition-all flex items-center border border-slate-200">
               {isLoading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-slate-400 border-t-slate-900 rounded-full animate-spin mr-3"></div>
@@ -185,54 +153,35 @@ function GalleryView({ deviceId }) {
         )}
       </div>
 
-      {/* Fullscreen Modal Overlay */}
       {selectedImage && (
-        <div
-          className="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-50 flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-300"
-          onClick={() => setSelectedImage(null)}
-        >
-          <div
-            className="bg-white rounded-[40px] overflow-hidden shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col relative animate-in zoom-in-95 duration-500 border border-white/20"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-50 flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-300" onClick={() => setSelectedImage(null)}>
+          <div className="bg-white rounded-[40px] overflow-hidden shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col relative animate-in zoom-in-95 duration-500 border border-white/20" onClick={(e) => e.stopPropagation()}>
             <div className="p-8 border-b border-slate-100 flex items-center justify-between">
               <div>
                 <h4 className="text-xl font-black text-slate-900 truncate max-w-md">{selectedImage.file_name}</h4>
                 <div className="flex items-center mt-2 space-x-4">
                   <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-widest rounded-lg">
-                    {selectedImage.category}
+                    {CATEGORY_LABELS[selectedImage.category] || selectedImage.category}
                   </span>
                   <p className="text-xs text-slate-400 font-bold flex items-center">
                     <Calendar className="w-3.5 h-3.5 mr-1.5" />
-                    {(selectedImage.size / 1024).toFixed(1)} KB • Path: {selectedImage.file_path}
+                    {((selectedImage.size || 0) / 1024).toFixed(1)} KB
                   </p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
-                <a
-                  href={getThumbnailUrl(selectedImage)}
-                  download={selectedImage.file_name}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-900 hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
-                >
+                <a href={getThumbnailUrl(selectedImage)} download={selectedImage.file_name} target="_blank" rel="noreferrer"
+                  className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-900 hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
                   <Download className="w-5 h-5" />
                 </a>
-                <button
-                  onClick={() => setSelectedImage(null)}
-                  className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-900 hover:bg-rose-500 hover:text-white transition-all shadow-sm"
-                >
+                <button onClick={() => setSelectedImage(null)}
+                  className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-900 hover:bg-rose-500 hover:text-white transition-all shadow-sm">
                   <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
-
             <div className="flex-1 bg-slate-50 flex items-center justify-center p-6 overflow-hidden">
-              <img
-                src={getThumbnailUrl(selectedImage)}
-                alt={selectedImage.file_name}
-                className="max-w-full max-h-[60vh] object-contain rounded-3xl shadow-2xl"
-              />
+              <img src={getThumbnailUrl(selectedImage)} alt={selectedImage.file_name} className="max-w-full max-h-[60vh] object-contain rounded-3xl shadow-2xl" />
             </div>
           </div>
         </div>
@@ -242,4 +191,3 @@ function GalleryView({ deviceId }) {
 }
 
 export default GalleryView;
-
