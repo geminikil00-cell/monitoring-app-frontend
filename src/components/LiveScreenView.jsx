@@ -144,19 +144,24 @@ export default function LiveScreenView({ selectedDevice, toggles }) {
     }
   };
 
+  // Stop all feeds on unmount only (not on toggle changes)
   useEffect(() => {
+    const selectedDeviceLocal = selectedDevice;
+    const tokenLocal = token;
+    const togglesLocal = toggles;
     return () => {
       if (audioIntervalRef.current) clearInterval(audioIntervalRef.current);
-      if (audioContextRef.current) audioContextRef.current.close();
-      
-      // Stop all feeds when navigating away
-      if (selectedDevice && token) {
-        if (toggles?.screen) dataService.stopLiveView(selectedDevice.id, token).catch(() => {});
-        if (toggles?.camera) dataService.sendCommandPayload(token, selectedDevice.id, 'STOP_CAMERA_FEED', null).catch(() => {});
-        if (toggles?.mic) dataService.sendCommandPayload(token, selectedDevice.id, 'STOP_MIC_FEED', null).catch(() => {});
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+      if (selectedDeviceLocal && tokenLocal && togglesLocal) {
+        if (togglesLocal.screen) dataService.stopLiveView(selectedDeviceLocal.id, tokenLocal).catch(() => {});
+        if (togglesLocal.camera) dataService.sendCommandPayload(tokenLocal, selectedDeviceLocal.id, 'STOP_CAMERA_FEED', null).catch(() => {});
+        if (togglesLocal.mic) dataService.sendCommandPayload(tokenLocal, selectedDeviceLocal.id, 'STOP_MIC_FEED', null).catch(() => {});
       }
     };
-  }, [selectedDevice, token, toggles]);
+  }, []); // empty deps - only on unmount
 
   useEffect(() => {
     if (toggles && !toggles.mic) {

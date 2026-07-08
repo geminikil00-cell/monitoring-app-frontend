@@ -7,6 +7,7 @@ function GalleryView({ deviceId }) {
   const { token } = useAuthContext();
   const [selectedImage, setSelectedImage] = useState(null);
   const [mediaFiles, setMediaFiles] = useState([]);
+  const [allCategories, setAllCategories] = useState(['All']);
   const [activeCategory, setActiveTab] = useState('All');
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,8 +26,23 @@ function GalleryView({ deviceId }) {
     try {
       const categoryParam = category === 'All' ? null : category;
       const res = await dataService.getDeviceMedia(token, deviceId, skipCount, 50, categoryParam);
-      if (res.data.length < 50) setHasMore(false);
-      setMediaFiles(prev => skipCount === 0 ? res.data : [...prev, ...res.data]);
+      const newData = res.data || [];
+      if (skipCount === 0) {
+        setMediaFiles(newData);
+        if (category === 'All' && newData.length > 0) {
+          const unique = ['All', ...new Set(newData.map(f => f.category).filter(Boolean))];
+          setAllCategories(unique);
+        }
+      } else {
+        setMediaFiles(prev => [...prev, ...newData]);
+        if (category === 'All' && newData.length > 0) {
+          setAllCategories(prev => {
+            const merged = new Set([...prev, ...newData.map(f => f.category).filter(Boolean)]);
+            return ['All', ...merged].filter(c => c !== 'All' || c === 'All');
+          });
+        }
+      }
+      if (newData.length < 50) setHasMore(false);
     } catch (error) {
       console.error('Error loading media:', error);
     } finally {
@@ -34,7 +50,7 @@ function GalleryView({ deviceId }) {
     }
   };
 
-  const categories = ['All', ...new Set((mediaFiles || []).map(f => f.category).filter(Boolean))];
+  const categories = allCategories;
 
   const filteredImages = (mediaFiles || []).filter(
     (file) => {
@@ -56,12 +72,12 @@ function GalleryView({ deviceId }) {
   const getThumbnailUrl = (img) => {
     if (!img.url) return getFullImageUrl(img.s3_key);
     if (img.url.includes('mock.r2.cloudflarestorage.com')) return getFullImageUrl(img.s3_key);
+    if (img.url.startsWith('/')) return getFullImageUrl(img.s3_key);
     return img.url;
   };
 
   const handleCategoryChange = (cat) => {
     setActiveTab(cat);
-    setMediaFiles([]);
     setHasMore(true);
     fetchMedia(0, cat);
   };
