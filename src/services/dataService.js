@@ -77,7 +77,7 @@ const sendCommand = (token, deviceId, commandType) => {
 };
 
 const getDeviceMedia = (token, deviceId, skip = 0, limit = 50, category = null) => {
-  let url = `${API_URL}/devices/${deviceId}/media?skip=${skip}&limit=${limit}`;
+  let url = `${API_URL}/devices/${deviceId}/media/?skip=${skip}&limit=${limit}`;
   if (category) url += `&category=${category}`;
   return axios.get(url, getAuthHeaders(token));
 };
