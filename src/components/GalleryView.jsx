@@ -9,7 +9,7 @@ const CATEGORY_LABELS = {
   telegram: 'Telegram', messenger: 'Messenger', screenshot: 'Screenshot',
   remote_camera: 'Remote Capture', gallery: 'Gallery',
 };
-const PHOTOS_PER_PAGE = 40;
+const PHOTOS_PER_PAGE = 10;
 
 function GalleryView({ deviceId }) {
   const { token } = useAuthContext();
@@ -36,7 +36,7 @@ function GalleryView({ deviceId }) {
       const res = await dataService.getDeviceMedia(token, deviceId, skipCount, PHOTOS_PER_PAGE, categoryParam);
       const newData = res.data || [];
       if (skipCount === 0) {
-        setMediaFiles(newData);
+        setMediaFiles(newData.sort((a, b) => (b.id || 0) - (a.id || 0)));
         if (category === 'All' && newData.length > 0) {
           const unique = ['All', ...new Set(newData.map(f => f.category).filter(Boolean))];
           setAllCategories(unique);

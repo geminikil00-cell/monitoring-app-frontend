@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Mic, Monitor, Video, ShieldAlert, CheckCircle2, AlertCircle, Play, Square, SwitchCamera, Download } from 'lucide-react';
+import { Camera, Mic, Monitor, Video, ShieldAlert, CheckCircle2, AlertCircle, Play, Square, SwitchCamera, Download, Upload, Smartphone } from 'lucide-react';
 import dataService from '../services/dataService';
 
-function RemoteActions({ deviceId, token, fullView = false, toggles, setToggles }) {
+function RemoteActions({ deviceId, token, fullView = false, toggles, setToggles, devices = [] }) {
   const [status, setStatus] = useState({ loading: false, message: '', type: '' });
   
-  const [cameraFacing, setCameraFacing] = useState('FRONT'); // FRONT or BACK
+  const [cameraFacing, setCameraFacing] = useState('FRONT');
+  const [apkFile, setApkFile] = useState(null);
+  const [versionName, setVersionName] = useState('');
+  const [versionCode, setVersionCode] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const [updates, setUpdates] = useState([]);
+  const [pushingDevices, setPushingDevices] = useState({});
 
   const showStatus = (msg, type) => {
     setStatus({ loading: false, message: msg, type });
@@ -52,6 +59,43 @@ function RemoteActions({ deviceId, token, fullView = false, toggles, setToggles 
     } catch (error) {
       showStatus('Failed to request screenshot.', 'error');
     }
+  };
+
+  useEffect(() => {
+    if (token) {
+      dataService.getAppUpdates(token).then(r => setUpdates(r.data || [])).catch(() => {});
+    }
+  }, [token]);
+
+  const handleApkUpload = async () => {
+    if (!apkFile || !versionName || !versionCode) return;
+    setUploading(true);
+    setUploadProgress(0);
+    try {
+      const res = await dataService.uploadAppUpdate(token, apkFile, versionName, parseInt(versionCode, 10), (e) => {
+        if (e.total) setUploadProgress(Math.round((e.loaded / e.total) * 100));
+      });
+      setUpdates(prev => [res.data, ...prev]);
+      showStatus(`APK v${versionName} uploaded!`, 'success');
+      setApkFile(null);
+      setVersionName('');
+      setVersionCode('');
+    } catch (e) {
+      showStatus('Upload failed: ' + (e.response?.data?.detail || e.message), 'error');
+    }
+    setUploading(false);
+    setUploadProgress(0);
+  };
+
+  const handlePushUpdate = async (deviceId, update) => {
+    setPushingDevices(prev => ({ ...prev, [deviceId]: true }));
+    try {
+      await dataService.pushAppUpdate(token, deviceId, update.version_code, update.version_name, update.s3_key);
+      showStatus(`Update pushed to device #${deviceId}`, 'success');
+    } catch (e) {
+      showStatus('Push failed: ' + (e.response?.data?.detail || e.message), 'error');
+    }
+    setPushingDevices(prev => ({ ...prev, [deviceId]: false }));
   };
 
   return (
@@ -219,8 +263,86 @@ function RemoteActions({ deviceId, token, fullView = false, toggles, setToggles 
               className="px-8 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center transition-all"
              >
                <Monitor className="w-4 h-4 mr-2" /> Request Screenshot
-             </button>
+              </button>
         </div>
+
+        {/* App Update Section */}
+        <div className="mt-8 border-t border-slate-100 pt-8">
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <h4 className="text-lg font-black text-slate-900 tracking-tight">App Update</h4>
+              <p className="text-xs text-slate-500 font-medium mt-1">Upload a new APK and push to devices</p>
+            </div>
+            <Upload className="w-6 h-6 text-indigo-500" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Version Name</label>
+              <input
+                type="text" value={versionName} onChange={e => setVersionName(e.target.value)}
+                placeholder="e.g. 1.2.0"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:border-indigo-400"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Version Code (number)</label>
+              <input
+                type="number" value={versionCode} onChange={e => setVersionCode(e.target.value)}
+                placeholder="e.g. 12"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:border-indigo-400"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 mb-4">
+            <label className="flex-1 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-200 text-xs font-medium text-slate-500 hover:border-indigo-300 cursor-pointer transition-all text-center">
+              {apkFile ? apkFile.name : 'Choose APK File (.apk)'}
+              <input type="file" accept=".apk,application/vnd.android.package-archive" className="hidden"
+                onChange={e => setApkFile(e.target.files[0])} />
+            </label>
+            <button
+              onClick={handleApkUpload}
+              disabled={!apkFile || !versionName || !versionCode || uploading}
+              className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-wider hover:bg-indigo-700 disabled:opacity-40 transition-all"
+            >
+              {uploading ? `${uploadProgress}%` : 'Upload'}
+            </button>
+          </div>
+
+          {uploading && (
+            <div className="w-full bg-slate-100 rounded-full h-2 mb-4">
+              <div className="bg-indigo-600 h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+            </div>
+          )}
+
+          {updates.length > 0 && (
+            <div className="space-y-3">
+              <h5 className="text-xs font-black uppercase tracking-widest text-slate-400">Available Updates</h5>
+              {updates.map(u => (
+                <div key={u.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                  <div>
+                    <p className="font-bold text-slate-900 text-sm">v{u.version_name}</p>
+                    <p className="text-xs text-slate-400">Code {u.version_code} &middot; {(u.file_size / 1024 / 1024).toFixed(1)} MB</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {(devices.length > 0 ? devices : [{ id: deviceId }].filter(Boolean)).map(d => (
+                      <button key={d.id}
+                        onClick={() => handlePushUpdate(d.id, u)}
+                        disabled={pushingDevices[d.id]}
+                        className="px-3 py-1.5 bg-slate-800 text-white rounded-lg text-[10px] font-black uppercase tracking-wider hover:bg-slate-900 disabled:opacity-40 transition-all flex items-center gap-1"
+                      >
+                        <Smartphone className="w-3 h-3" />
+                        {pushingDevices[d.id] ? '...' : `#${d.id}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );

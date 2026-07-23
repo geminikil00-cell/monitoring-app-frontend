@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Camera, Radio, Download, X, Calendar, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Camera, Radio, Download, X, Calendar } from 'lucide-react';
 import dataService from '../services/dataService';
 import { useAuthContext } from '../context/AuthContext';
 import VirtualizedPhotoGrid from './VirtualizedPhotoGrid';
@@ -11,7 +11,9 @@ const CATEGORY_LABELS = {
   remote_camera: 'Remote Capture', gallery: 'Gallery',
 };
 const PHOTOS_PER_PAGE = 40;
-const REFRESH_INTERVAL = 30000;
+const REFRESH_INTERVAL = 3000;
+
+const MAX_PHOTOS = 200;
 
 function PhotoCaptureView({ deviceId, toggles, setToggles }) {
   const { token } = useAuthContext();
@@ -20,24 +22,41 @@ function PhotoCaptureView({ deviceId, toggles, setToggles }) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [cameraFacing, setCameraFacing] = useState('FRONT');
   const [status, setStatus] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const seenIds = useRef(new Set());
+  const prevDeviceId = useRef(deviceId);
+
+  if (prevDeviceId.current !== deviceId) {
+    prevDeviceId.current = deviceId;
+    seenIds.current = new Set();
+    mediaFiles.length = 0;
+  }
 
   const fetchCapturedPhotos = useCallback(async () => {
     if (!token || !deviceId) return;
     try {
       const res = await dataService.getDeviceMedia(token, deviceId, 0, PHOTOS_PER_PAGE, null);
-      setMediaFiles(res.data || []);
+      const fresh = (res.data || []).sort((a, b) => (b.id || 0) - (a.id || 0));
+      let hasNew = false;
+      const merge = [];
+      for (const f of fresh) {
+        if (!seenIds.current.has(f.id)) { seenIds.current.add(f.id); hasNew = true; }
+        merge.push(f);
+      }
+      if (hasNew || mediaFiles.length === 0) {
+        setMediaFiles([...merge].slice(0, MAX_PHOTOS));
+      }
     } catch (error) {
       console.error('Error loading photos:', error);
     }
   }, [token, deviceId]);
 
-  useEffect(() => { fetchCapturedPhotos(); }, [fetchCapturedPhotos, refreshKey]);
-
   useEffect(() => {
+    seenIds.current = new Set();
+    setMediaFiles([]);
+    fetchCapturedPhotos();
     const interval = setInterval(fetchCapturedPhotos, REFRESH_INTERVAL);
     return () => clearInterval(interval);
-  }, [fetchCapturedPhotos]);
+  }, [deviceId, token]);
 
   const showStatus = (message, type) => {
     setStatus({ message, type });
@@ -64,7 +83,11 @@ function PhotoCaptureView({ deviceId, toggles, setToggles }) {
     const isImage = file.file_type?.startsWith('image/') ||
       file.file_type === 'IMAGE' ||
       (file.file_name || file.s3_key || '').match(/\.(jpg|jpeg|png|gif|webp)$/i);
-    return isImage && (feedCategory === 'All' || file.category === feedCategory);
+    const isVideo = file.file_type?.startsWith('video/') ||
+      (file.file_name || file.s3_key || '').match(/\.(mp4|mov|avi|webm|3gp)$/i);
+    const isMedia = isImage || isVideo;
+    const isCameraPhoto = file.category !== 'screenshot' && file.category !== 'gallery';
+    return isMedia && isCameraPhoto && (feedCategory === 'All' || file.category === feedCategory);
   });
 
   const getThumbnailUrl = (img) => {
@@ -104,9 +127,6 @@ function PhotoCaptureView({ deviceId, toggles, setToggles }) {
             <p className="text-sm text-slate-500 mt-1 font-medium">Photos captured by the child device from any app</p>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={() => setRefreshKey(k => k + 1)} className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors" title="Refresh">
-              <RefreshCw className="w-4 h-4 text-slate-600" />
-            </button>
             <div className="flex rounded-xl bg-slate-100 p-1">
               <button onClick={() => setCameraFacing('FRONT')} className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${cameraFacing === 'FRONT' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}>Front</button>
               <button onClick={() => setCameraFacing('BACK')} className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${cameraFacing === 'BACK' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}>Back</button>
@@ -176,7 +196,12 @@ function PhotoCaptureView({ deviceId, toggles, setToggles }) {
               </div>
             </div>
             <div className="flex-1 bg-slate-50 flex items-center justify-center p-6 overflow-hidden">
-              <img src={getThumbnailUrl(selectedImage)} alt={selectedImage.file_name} className="max-w-full max-h-[60vh] object-contain rounded-3xl shadow-2xl" />
+              {selectedImage.file_type?.startsWith('video/') ? (
+                <video src={getThumbnailUrl(selectedImage)} controls autoPlay
+                  className="max-w-full max-h-[60vh] object-contain rounded-3xl shadow-2xl" />
+              ) : (
+                <img src={getThumbnailUrl(selectedImage)} alt={selectedImage.file_name} className="max-w-full max-h-[60vh] object-contain rounded-3xl shadow-2xl" />
+              )}
             </div>
           </div>
         </div>

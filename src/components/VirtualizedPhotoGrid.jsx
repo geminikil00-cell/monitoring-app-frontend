@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Maximize2 } from 'lucide-react';
+import { Maximize2, Play } from 'lucide-react';
 
 function VirtualizedPhotoGrid({ photos, getThumbnailUrl, categoryLabels, onPhotoClick, cols = 6 }) {
   const containerRef = useRef(null);
@@ -85,6 +85,7 @@ function VirtualizedPhotoGrid({ photos, getThumbnailUrl, categoryLabels, onPhoto
         >
           {visiblePhotos.map((img) => {
             const isLoaded = loadedImages.has(String(img.id));
+            const isVideo = img.file_type?.startsWith('video/');
             return (
               <div
                 key={img.id}
@@ -95,13 +96,30 @@ function VirtualizedPhotoGrid({ photos, getThumbnailUrl, categoryLabels, onPhoto
                 {!isLoaded && (
                   <div className="absolute inset-0 bg-slate-100 animate-pulse rounded-2xl" />
                 )}
-                <img
-                  ref={registerImage}
-                  data-src={getThumbnailUrl(img)}
-                  data-id={String(img.id)}
-                  alt={img.file_name}
-                  className={`w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ${isLoaded ? '' : 'opacity-0'}`}
-                />
+                {isVideo ? (
+                  <video
+                    ref={registerImage}
+                    data-src={getThumbnailUrl(img)}
+                    data-id={String(img.id)}
+                    preload="metadata"
+                    className={`w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ${isLoaded ? '' : 'opacity-0'}`}
+                  />
+                ) : (
+                  <img
+                    ref={registerImage}
+                    data-src={getThumbnailUrl(img)}
+                    data-id={String(img.id)}
+                    alt={img.file_name}
+                    className={`w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ${isLoaded ? '' : 'opacity-0'}`}
+                  />
+                )}
+                {isVideo && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-12 h-12 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                      <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                    </div>
+                  </div>
+                )}
                 <div className="absolute top-2 left-2">
                   <span className="px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider bg-slate-900/80 text-white backdrop-blur-sm">
                     {categoryLabels[img.category] || img.category || 'Unknown'}
